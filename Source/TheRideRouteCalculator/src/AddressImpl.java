@@ -11,6 +11,13 @@ public class AddressImpl implements Address {
 
     //************DO NOT IMPLEMENT THESE UNTIL UNIT TESTS HAVE BEEN CREATED************
 
+    public AddressImpl(int houseNum, String stName, String city, int zC) {
+        this.houseNumber = houseNum;
+        this.streetName =stName;
+        this.city = city;
+        this.zipCode = zC;
+    }
+
     @Override
     public String getAddress() {
         return null;
