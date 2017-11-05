@@ -3,6 +3,22 @@
  */
 public class TripImpl implements Trip {
 
+    //************DO NOT IMPLEMENT THESE UNTIL UNIT TESTS HAVE BEEN CREATED************
+
+    public TripImpl(int tripId, boolean subscription, boolean ada, boolean anchor, String requestTime,
+                 int numPca, int numCompanions, boolean serviceAnimal, Address pickup, Address dropoff) {
+        this.tripID = tripId;
+        this.subscription = subscription;
+        this.ada = ada;
+        this.anchor = anchor;
+        this.requestTime = requestTime;
+        this.numPca = numPca;
+        this.numCompanions = numCompanions;
+        this.serviceAnimal = serviceAnimal;
+        this.pickup = pickup;
+        this.dropoff = dropoff;
+    }
+
     private int tripID;
     private boolean subscription;
     private boolean ada;
