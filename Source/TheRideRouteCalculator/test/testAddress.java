@@ -6,10 +6,12 @@ import static org.junit.Assert.assertEquals;
  * Created by michaelfleischmann on 11/5/17.
  */
 public class testAddress {
-    Address a = new AddressImpl(160, "S 2nd St", "Brooklyn", 11211);
+    Address brooklyn = new AddressImpl(277, "Bedford Ave", "Brooklyn", 11211);
+    Address ohio = new AddressImpl(25774, "Tricia Dr", "Westlake", 44145);
 
     @Test
     public void testGeoCode() throws Exception {
-        assertEquals(a.getGeoCode(), "40.7127260,-73.9614129");
+        assertEquals(brooklyn.getGeoCode(), "40.7142205,-73.9612903");
+        assertEquals(ohio.getGeoCode(), "41.4468986,-81.9004179");
     }
 }
