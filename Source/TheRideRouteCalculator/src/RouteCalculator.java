@@ -4,6 +4,9 @@
 
 public interface RouteCalculator {
 
+
+
+
     /**
      * Calculate all trips of the route.
      */
