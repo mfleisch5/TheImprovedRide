@@ -60,8 +60,7 @@ public class AddressImpl implements Address {
         URL url = new URL(workingURL);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
-        Document doc = DocumentBuilderFactory.
-                newInstance().newDocumentBuilder().parse(connection.getInputStream());
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(connection.getInputStream());
         NodeList nodes = doc.getElementsByTagName("location");
         StringBuilder res = new StringBuilder();
         for(int i = 0; i < nodes.getLength(); i++) {
