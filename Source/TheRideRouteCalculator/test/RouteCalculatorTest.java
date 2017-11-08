@@ -66,4 +66,14 @@ public class RouteCalculatorTest {
 
     }
 
+    /**
+     * Tests the route calculator for input where 4 trips are scheduled at the same time, 2 of which are in the same
+     * town and the other 2 are in a different town
+     */
+    @Test
+    public void testTripsTwoSameTwoDiffTowns() {
+
+
+    }
+
 }
