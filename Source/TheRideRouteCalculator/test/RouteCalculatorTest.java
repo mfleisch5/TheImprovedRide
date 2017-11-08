@@ -23,16 +23,16 @@ public class RouteCalculatorTest {
         Address dropoff4 = new AddressImpl(306, "Walpole Street", "Norwood", 2062);
 
         Trip trip1 = new TripImpl(1, false, true, true,
-                        "3:00 PM", 1, 0, false, pickup1, dropoff1);
+                        "3:00 PM", 1, 0, false, pickup1, dropoff1, 1);
 
         Trip trip2 = new TripImpl(26, false, true, false, "10:00 AM",
-                1, 0, false, pickup2, dropoff2);
+                1, 0, false, pickup2, dropoff2, 12);
 
         Trip trip3 = new TripImpl(12, false, false, true, "11:15 PM",
-                0, 0, false, pickup3, dropoff3);
+                0, 0, false, pickup3, dropoff3, 35);
 
         Trip trip4 = new TripImpl(27, false, true, false, "2:00 PM",
-                0, 0, false, pickup4, dropoff4);
+                0, 0, false, pickup4, dropoff4, 5);
 
         List<Trip> trips = new ArrayList<Trip>();
         trips.add(trip1);
@@ -85,17 +85,19 @@ public class RouteCalculatorTest {
         Address pickup4 = new AddressImpl(150, "Prospect Street", "Hingham", 2043);
         Address dropoff4 = new AddressImpl(2, "Pond Park Road", "Hingham", 2043);
 
+
+        // Same Ride ID to denote RIDE SHARING
         Trip trip1 = new TripImpl(1, false, false, true,
-                "3:00 PM", 1, 0, false, pickup1, dropoff1);
+                "3:00 PM", 1, 0, false, pickup1, dropoff1, 14);
 
         Trip trip2 = new TripImpl(14, false, true, false, "3:05 PM",
-                1, 0, false, pickup2, dropoff2);
+                1, 0, false, pickup2, dropoff2, 14);
 
         Trip trip3 = new TripImpl(22, false, false, true, "11:15 AM",
-                0, 0, false, pickup3, dropoff3);
+                0, 0, false, pickup3, dropoff3, 23);
 
         Trip trip4 = new TripImpl(14, false, true, false, "11:15 AM",
-                0, 0, false, pickup4, dropoff4);
+                0, 0, false, pickup4, dropoff4, 23);
 
 
         List<Trip> trips = new ArrayList<Trip>();
@@ -110,9 +112,6 @@ public class RouteCalculatorTest {
         calculator.routeCalculator();
 
 
-        /**
-         * Need to figure out how to represent rideshare ride - trip
-         */
         String answer = "Route 1:\n" +
                 "Pickup 3:00 PM, Trip ID 1, 149 Sutherland Road, Brighton, 2135\n" +
                 "Dropoff, Trip ID 1, 63 Everett Street, Allston, 2134\n" +

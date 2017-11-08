@@ -6,7 +6,7 @@ public class TripImpl implements Trip {
     //************DO NOT IMPLEMENT THESE UNTIL UNIT TESTS HAVE BEEN CREATED************
 
     public TripImpl(int tripId, boolean subscription, boolean ada, boolean anchor, String requestTime,
-                 int numPca, int numCompanions, boolean serviceAnimal, Address pickup, Address dropoff) {
+                 int numPca, int numCompanions, boolean serviceAnimal, Address pickup, Address dropoff, int rideID) {
         this.tripID = tripId;
         this.subscription = subscription;
         this.ada = ada;
@@ -17,6 +17,7 @@ public class TripImpl implements Trip {
         this.serviceAnimal = serviceAnimal;
         this.pickup = pickup;
         this.dropoff = dropoff;
+        this.rideID = rideID;
     }
 
     private int tripID;
@@ -29,6 +30,7 @@ public class TripImpl implements Trip {
     private boolean serviceAnimal;
     private Address pickup;
     private Address dropoff;
+    private int rideID;
 
     @Override
     public int getTripID() {
@@ -78,5 +80,10 @@ public class TripImpl implements Trip {
     @Override
     public Address getDropoff() {
         return null;
+    }
+
+    @Override
+    public int getRideID() {
+        return 0;
     }
 }
