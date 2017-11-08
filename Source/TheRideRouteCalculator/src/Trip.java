@@ -68,4 +68,11 @@ public interface Trip {
      * @return
      */
     public Address getDropoff();
+
+
+    /**
+     * Return the Ride Id of this trip.
+     * @return
+     */
+    public int getRideID();
 }
