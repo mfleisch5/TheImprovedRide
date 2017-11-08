@@ -30,16 +30,16 @@ public class testRouteCalculator {
 
         // Same trip ID to denote ride sharing
         Trip trip1 = new TripImpl(2532, true, true, true, "6:15 PM",
-                0, 0, false, pickup1, dropoff1);
+                0, 0, false, pickup1, dropoff1, 1);
 
         Trip trip2 = new TripImpl(2533, true, true, false, "8:45 AM",
-                0, 0, false, pickup2, dropoff2);
+                0, 0, false, pickup2, dropoff2, 2);
 
         Trip trip3 = new TripImpl(3077, false, true, true, "10:30 AM",
-                0, 0, false, pickup3, dropoff3);
+                0, 0, false, pickup3, dropoff3, 3);
 
         Trip trip4 = new TripImpl(3078, false, true, false, "6:00 AM",
-                0, 0, false, pickup4, dropoff4);
+                0, 0, false, pickup4, dropoff4, 4);
 
         List<Trip> trips = new ArrayList<Trip>();
         trips.add(trip1);

@@ -1,3 +1,5 @@
+import java.net.MalformedURLException;
+
 /**
  * Interface to represent an address in a trip.
  */
@@ -33,5 +35,7 @@ public interface Address {
      * @return The zip code as an integer.
      */
     public int getZipCode();
+
+    public String getGeoCode() throws Exception;
 
 }
