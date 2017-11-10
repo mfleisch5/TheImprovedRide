@@ -129,4 +129,9 @@ public class RouteCalculatorTest {
                 answer, calculator.outPutRoutes());
     }
 
+    @Test
+    public void testConstructor() {
+        RouteCalculator r = new RouteCalculatorImpl("sampleData.xlsx");
+    }
+
 }

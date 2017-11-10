@@ -75,4 +75,8 @@ public interface Trip {
      * @return
      */
     public int getRideID();
+
+    public String toString(boolean pickup);
+
 }
+

@@ -86,4 +86,15 @@ public class TripImpl implements Trip {
     public int getRideID() {
         return 0;
     }
+
+
+    public String toString(boolean pickup) {
+        if(pickup) {
+            return "Trip ID " + tripID + " " + this.pickup.getAddress();
+        }
+        else {
+            return "Trip ID " + tripID + " " + this.dropoff.getAddress();
+        }
+    }
+
 }
