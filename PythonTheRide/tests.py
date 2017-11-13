@@ -3,9 +3,9 @@ import unittest
 from ortools.constraint_solver import pywrapcp
 
 
-class TestRouteCalculator(unittest.TestCase):
+class TestStringMethods(unittest.TestCase):
 
-    def test_upper(self):
+    def test_routing(self):
         # Once the methods are done, we pass in the actual address and use a geocode method
         # to convert it to lat/long
         #
@@ -24,7 +24,7 @@ class TestRouteCalculator(unittest.TestCase):
 
         start_times = 54000
 
-        data = [[pickup1][dropoff1] , demands, start_times]  #data array
+        data = [[pickup1, dropoff1], demands, start_times]  #data array
         locations = data[0]
 
         # depot is where we start off
