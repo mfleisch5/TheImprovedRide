@@ -112,29 +112,28 @@ class CreateTotalTimeCallback(object):
     return service_time + travel_time
 
 def main():
+    # Create the data.
+    data = create_data_array()
+    locations = data[0]
+    demands = data[1]
+    start_times = data[2]
+    num_locations = len(locations)
+    depot = 0
+    num_vehicles = 5
+    search_time_limit = 400000
 
-  # Create the data.
-  data = create_data_array()
-  locations = data[0]
-  demands = data[1]
-  start_times = data[2]
-  num_locations = len(locations)
-  depot = 0
-  num_vehicles = 5
-  search_time_limit = 400000
-
-  # Create routing model.
-  if num_locations > 0:
+    # Create routing model.
+    if num_locations > 0:
 
     # The number of nodes of the VRP is num_locations.
     # Nodes are indexed from 0 to num_locations - 1. By default the start of
     # a route is node 0.
-    routing = pywrapcp.RoutingModel(num_locations, num_vehicles, depot)
-    search_parameters = pywrapcp.RoutingModel.DefaultSearchParameters()
+      routing = pywrapcp.RoutingModel(num_locations, num_vehicles, depot)
+      search_parameters = pywrapcp.RoutingModel.DefaultSearchParameters()
 
     # Setting first solution heuristic: the
     # method for finding a first solution to the problem.
-    search_parameters.first_solution_strategy = (
+      search_parameters.first_solution_strategy = (
         routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
 
     # The 'PATH_CHEAPEST_ARC' method does the following:
@@ -144,98 +143,94 @@ def main():
 
     # Put callbacks to the distance function and travel time functions here.
 
-    dist_between_locations = CreateDistanceCallback(locations)
-    dist_callback = dist_between_locations.Distance
+      dist_between_locations = CreateDistanceCallback(locations)
+      dist_callback = dist_between_locations.Distance
 
-    routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
-    demands_at_locations = CreateDemandCallback(demands)
-    demands_callback = demands_at_locations.Demand
+      routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
+      demands_at_locations = CreateDemandCallback(demands)
+      demands_callback = demands_at_locations.Demand
 
     # Adding capacity dimension constraints.
-    VehicleCapacity = 100;
-    NullCapacitySlack = 0;
-    fix_start_cumul_to_zero = True
-    capacity = "Capacity"
+      VehicleCapacity = 100
+      NullCapacitySlack = 0
+      fix_start_cumul_to_zero = True
+      capacity = "Capacity"
 
-    routing.AddDimension(demands_callback, NullCapacitySlack, VehicleCapacity,
+      routing.AddDimension(demands_callback, NullCapacitySlack, VehicleCapacity,
                          fix_start_cumul_to_zero, capacity)
-    
+
     # Adding time dimension constraints.
-    time_per_demand_unit = 300
-    horizon = 24 * 3600
-    time = "Time"
-    tw_duration = 5 * 3600
-    speed = 10
+      time_per_demand_unit = 300
+      horizon = 24 * 3600
+      time = "Time"
+      tw_duration = 5 * 3600
+      speed = 10
 
-    service_times = CreateServiceTimeCallback(demands, time_per_demand_unit)
-    service_time_callback = service_times.ServiceTime
+      service_times = CreateServiceTimeCallback(demands, time_per_demand_unit)
+      service_time_callback = service_times.ServiceTime
 
-    total_times = CreateTotalTimeCallback(service_time_callback, dist_callback, speed)
-    total_time_callback = total_times.TotalTime
+      total_times = CreateTotalTimeCallback(service_time_callback, dist_callback, speed)
+      total_time_callback = total_times.TotalTime
 
     # Add a dimension for time-window constraints and limits on the start times and end times.
 
-    routing.AddDimension(total_time_callback,  # total time function callback
+      routing.AddDimension(total_time_callback,  # total time function callback
                          horizon,
                          horizon,
                          fix_start_cumul_to_zero,
                          time)
-    
-    
+
     # Add limit on size of the time windows.
-    time_dimension = routing.GetDimensionOrDie(time)
+      time_dimension = routing.GetDimensionOrDie(time)
 
-    for order in xrange(1, num_locations):
-      start = start_times[order]
-      time_dimension.CumulVar(order).SetRange(start, start + tw_duration)
-    
-
+      for order in xrange(1, num_locations):
+        start = start_times[order]
+        time_dimension.CumulVar(order).SetRange(start, start + tw_duration)
 
     # Solve displays a solution if any.
-    assignment = routing.SolveWithParameters(search_parameters)
-    if assignment:
-      data = create_data_array()
-      locations = data[0]
-      demands = data[1]
-      start_times = data[2]
-      size = len(locations)
-      # Solution cost.
-      print ("Total distance of all routes: " , str(assignment.ObjectiveValue()))
-      # Inspect solution.
-      capacity_dimension = routing.GetDimensionOrDie(capacity);
-      time_dimension = routing.GetDimensionOrDie(time);
+      assignment = routing.SolveWithParameters(search_parameters)
+      if assignment:
+        data = create_data_array()
+        locations = data[0]
+        demands = data[1]
+        start_times = data[2]
+        size = len(locations)
+        # Solution cost.
+        print("Total distance of all routes: ", str(assignment.ObjectiveValue()))
+        # Inspect solution.
+        capacity_dimension = routing.GetDimensionOrDie(capacity);
+        time_dimension = routing.GetDimensionOrDie(time);
 
-      for vehicle_nbr in xrange(num_vehicles):
-        index = routing.Start(vehicle_nbr)
-        plan_output = 'Route {0}:'.format(vehicle_nbr)
+        for vehicle_nbr in xrange(num_vehicles):
+          index = routing.Start(vehicle_nbr)
+          plan_output = 'Route {0}:'.format(vehicle_nbr)
 
-        while not routing.IsEnd(index):
+          while not routing.IsEnd(index):
+            node_index = routing.IndexToNode(index)
+            load_var = capacity_dimension.CumulVar(index)
+            time_var = time_dimension.CumulVar(index)
+            plan_output += \
+            " {node_index} Load({load}) Time({tmin}, {tmax}) -> ".format(
+              node_index=node_index,
+              load=assignment.Value(load_var),
+              tmin=str(assignment.Min(time_var)),
+              tmax=str(assignment.Max(time_var)))
+            index = assignment.Value(routing.NextVar(index))
+
           node_index = routing.IndexToNode(index)
           load_var = capacity_dimension.CumulVar(index)
           time_var = time_dimension.CumulVar(index)
           plan_output += \
-                    " {node_index} Load({load}) Time({tmin}, {tmax}) -> ".format(
-                        node_index=node_index,
-                        load=assignment.Value(load_var),
-                        tmin=str(assignment.Min(time_var)),
-                        tmax=str(assignment.Max(time_var)))
-          index = assignment.Value(routing.NextVar(index))
-
-        node_index = routing.IndexToNode(index)
-        load_var = capacity_dimension.CumulVar(index)
-        time_var = time_dimension.CumulVar(index)
-        plan_output += \
-                  " {node_index} Load({load}) Time({tmin}, {tmax})".format(
-                      node_index=node_index,
-                      load=assignment.Value(load_var),
-                      tmin=str(assignment.Min(time_var)),
-                      tmax=str(assignment.Max(time_var)))
-        print (plan_output)
+          " {node_index} Load({load}) Time({tmin}, {tmax})".format(
+            node_index=node_index,
+            load=assignment.Value(load_var),
+            tmin=str(assignment.Min(time_var)),
+            tmax=str(assignment.Max(time_var)))
+          print(plan_output)
+      else:
+        print('No solution found.')
     else:
-      print ('No solution found.')
-  else:
-    print ('Specify an instance greater than 0.')
-
+        print('Specify an instance greater than 0.')
 
 
 def create_data_array():

@@ -34,9 +34,6 @@ def geo_lookup(addresses, outfile):
         latlong = ','.join([str(location['lat']), str(location['lng'])])
         data[address] = latlong
     with open(outfile, 'w') as out:
-        try:
-            json.dump(data, out)
-        except:
-            print(data)
+        json.dump(data, out, indent=4)
 
 geo_lookup(data['PickFullAddress'], 'PickUpGeo.json')
