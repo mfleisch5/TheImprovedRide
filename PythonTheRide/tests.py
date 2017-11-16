@@ -22,7 +22,7 @@ class TestStringMethods(unittest.TestCase):
         #
         # pickuptime1 = "3:00 PM"
 
-        start_times = 54000
+        start_times = [54000
 
         data = [[pickup1, dropoff1], demands, start_times]  #data array
         locations = data[0]

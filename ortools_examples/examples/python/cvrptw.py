@@ -147,6 +147,7 @@ def main():
       dist_callback = dist_between_locations.Distance
 
       routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
+      routing.AddPickupAndDelivery(1, 2)
       demands_at_locations = CreateDemandCallback(demands)
       demands_callback = demands_at_locations.Demand
 
@@ -198,8 +199,8 @@ def main():
         # Solution cost.
         print("Total distance of all routes: ", str(assignment.ObjectiveValue()))
         # Inspect solution.
-        capacity_dimension = routing.GetDimensionOrDie(capacity);
-        time_dimension = routing.GetDimensionOrDie(time);
+        capacity_dimension = routing.GetDimensionOrDie(capacity)
+        time_dimension = routing.GetDimensionOrDie(time)
 
         for vehicle_nbr in xrange(num_vehicles):
           index = routing.Start(vehicle_nbr)
