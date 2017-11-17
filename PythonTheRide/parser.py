@@ -18,18 +18,6 @@ def time_to_seconds(time):
     return hour * 60 * 60 + minutes * 60
 
 
-def parse(file):
-    data = pandas.read_csv(file)
-    res = []
-    for i, trip in data.iterrows():
-        res.append(Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickFullAddress'],
-                        trip['DropFullAddress'], tuple(float(geo) for geo in trip['PickGeo'].split(',')),
-                        tuple(float(geo) for geo in trip['DropGeo'].split(','))))
-    return res
-
-
-
-
 class Trip:
     """
     Create callback to calculate distances and travel times between points.
@@ -48,19 +36,19 @@ class Trip:
             # specified pickup time, 5 minutes early.
             self.earliestPickup = time_to_seconds(str(self.times)) - 300
             # given pickup time, we are 15 minutes late.
-            self.latestPickup = time_to_seconds(str(self.times)) + 600
+            self.latestPickup = time_to_seconds(str(self.times)) + 900
             # We are given pickup time, caluclate  pickup time, and are 5 min early
             self.earliestDropoff = time_to_seconds(self.times) - 300 + self.time_for_travel()
             # we are given pickup time, add travel time, and are 20 minutes
-            self.lastestDropoff = time_to_seconds(self.times) + self.time_for_travel() + 1200
+            self.latestDropoff = time_to_seconds(self.times) + self.time_for_travel() + 900
         else:
             # this means the dropoff time is given. calculate the time it takes to drive, and then 5 minutes early
             self.earliestPickup = time_to_seconds(str(self.times)) - self.time_for_travel() - 300
             # given dropoff time, we calucate when to arrive, and then are 15 minutes late.
-            self.latestPickup = time_to_seconds(str(self.times)) - self.time_for_travel() + 600
+            self.latestPickup = time_to_seconds(str(self.times)) - self.time_for_travel() + 900
             # we are given dropoff time. It's earliest pickup time + travel time
-            self.earliestDropoff = time_to_seconds(self.times) - 300
-            self.lastestDropoff = time_to_seconds(self.times)
+            self.earliestDropoff = time_to_seconds(self.times) - 1200
+            self.latestDropoff = time_to_seconds(self.times)
 
     def time_for_travel(self):
         return (abs(self.pickupcoords[0] - self.pickupcoords[1]) + abs(self.dropoffcoords[0] - self.dropoffcoords[1])) \
@@ -76,12 +64,12 @@ class AllTrips:
                         tuple(float(geo) for geo in trip['DropGeo'].split(','))))
 
         self.locations = [pickup for trip in self.trips for pickup in [trip.pickupcoords, trip.dropoffcoords]]
-        self.starttimes = [time for trip in self.trips for time in [trip.earliestPickup, trip.earliestDropoff]]
-        self.endtimes = [time for trip in self.trips for time in [trip.latestPickup, trip.latestPickup]]
+        self.starttimes = [int(time) for trip in self.trips for time in [trip.earliestPickup, trip.earliestDropoff]]
+        self.endtimes = [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]
 
     def testIt(self):
         print(self.locations, self.starttimes, self.endtimes, sep='\n')
-        print(len(self.locations), len(self.starttimes), len(self.endtimes), sep='\n')
+        print([a[1] - a[0] for a in zip(self.starttimes, self.endtimes)])
 
 
 trips = AllTrips('MockData.csv')
