@@ -20,69 +20,45 @@ from ortools.constraint_solver import routing_enums_pb2
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
-       # Manhattan distance
+    # Manhattan distance
     dist = abs(x1 - x2) + abs(y1 - y2)
 
     return dist
 
-#converts the given time in seconds to a string military time hour, minutes
+
+# converts the given time in seconds to a string military time hour, minutes
 def secondsToTime(seconds):
     minutes = seconds // 60
     hours = minutes // 60
     minutesRounded = minutes % 60
     time = 'AM'
 
-    if(hours >= 12):
+    if hours >= 12:
         time = 'PM'
         hours = hours % 12
-    if (hours == 0):
+    if hours == 0:
         hours = 12
-    if(minutesRounded < 10):
+    if minutesRounded < 10:
         minutesRounded = '0' + str(minutesRounded)
 
     return ('{0}:{1} {2}'.format(hours, minutesRounded, time))
 
 
+def time_to_seconds(time):
+    array = time.split()
+    time = array[0]
+    pm = array[1] == 'PM'
+    time = time.split(":")
 
-# this is the time it takes to get from pickup coord to dropoff assuming bus goes 25 mph
-def timeForTravel(pickupcoord, dropoffcoord):
-    return distance(pickupcoord[0], pickupcoord[1], dropoffcoord[0], dropoffcoord[1]) / (25/600)
+    hour = int(time[0])
+    minutes = int(time[1])
 
+    if pm and hour != 12:
+        hour = int(hour) + 12
+    if hour == 12 and not pm:
+        hour = 0
 
-class Trip(object):
-  """
-  Create callback to calculate distances and travel times between points.
-  """
-
-  def __init__(self, anchor, times, totalNumPassengers, PickupAddress, DropoffAddress, PickupCoords, DropoffCoords):
-    self.anchor = anchor
-    self.times = times
-    self.totalNumPassengers = totalNumPassengers
-    self.PickupAddress = PickupAddress
-    self.DropoffAddress = DropoffAddress
-    self.pickupcoords = PickupCoords #these are tuples
-    self.dropoffcoords = DropoffCoords
-
-    if (self.anchor == "P"):
-        # specifed pickup time, 5 minutes early.
-        self.earliestPickup=  time_to_seconds(str(self.times)) - 300
-        # given pickup time, we are 15 minutes late.
-        self.latestPickup = time_to_seconds(str(self.times)) + 600
-        # We are given pickup time, caluclate  pickup time, and are 5 min early
-        self.earliestDropoff = time_to_seconds(self.times) - 300 + timeForTravel(self.pickupcoords, self.dropoffcoords)
-        # we are given pickup time, add travel time, and are 20 minutes
-        self.lastestDropoff = time_to_seconds(self.times) + timeForTravel(self.pickupcoords, self.dropoffcoords) + 1200
-    else:
-        # this means the dropoff time is given. calculate the time it takes to drive, and then 5 minutes early
-        self.earliestPickup = time_to_seconds(str(self.times)) - timeForTravel(self.pickupcoords, self.dropoffcoords) - 300
-        # given dropoff time, we calucate when to arrive, and then are 15 minutes late.
-        self.latestPickup = time_to_seconds(str(self.times)) - timeForTravel(self.pickupcoords, self.dropoffcoords) + 600
-        # we are given dropoff time. It's earliest pickup time + travel time
-        self.earliestDropoff = time_to_seconds(self.times) - 300
-        self.lastestDropoff = time_to_seconds(self.times)
-
-
-# Distance callback
+    return hour * 60 * 60 + minutes * 60
 
 class CreateDistanceCallback(object):
   """Create callback to calculate distances and travel times between points."""
@@ -333,29 +309,27 @@ def create_data_array():
 
     return data
 
-
-
 # locations = [[820, 760], [960, 440], [500, 50], [490, 80], [130, 70], [290, 890], [580, 300],
-  #              [840, 390], [140, 240], [120, 390], [30, 820], [50, 100], [980, 520], [840, 250],
-  #              [610, 590], [10, 650], [880, 510], [910, 20], [190, 320], [930, 30], [500, 930],
-  #              [980, 140], [50, 420], [420, 90], [610, 620], [90, 970], [800, 550], [570, 690],
-  #              [230, 150], [200, 700], [850, 600], [980, 50]]
-  #
-  # demands =  [0, 19, 21, 6, 19, 7, 12, 16, 6, 16, 8, 14, 21, 16, 3, 22, 18,
-  #            19, 1, 24, 8, 12, 4, 8, 24, 24, 2, 20, 15, 2, 14, 9]
-  #
-  # start_times =  [0, 508, 103, 493, 225, 531, 89,
-  #                 565, 540, 108, 602, 466, 356, 303,
-  #                 399, 382, 362, 521, 23, 489, 445,
-  #                 318, 380, 55, 574, 515, 110, 310,
-  #                 387, 491, 328, 73]
+#              [840, 390], [140, 240], [120, 390], [30, 820], [50, 100], [980, 520], [840, 250],
+#              [610, 590], [10, 650], [880, 510], [910, 20], [190, 320], [930, 30], [500, 930],
+#              [980, 140], [50, 420], [420, 90], [610, 620], [90, 970], [800, 550], [570, 690],
+#              [230, 150], [200, 700], [850, 600], [980, 50]]
+#
+# demands =  [0, 19, 21, 6, 19, 7, 12, 16, 6, 16, 8, 14, 21, 16, 3, 22, 18,
+#            19, 1, 24, 8, 12, 4, 8, 24, 24, 2, 20, 15, 2, 14, 9]
+#
+# start_times =  [0, 508, 103, 493, 225, 531, 89,
+#                 565, 540, 108, 602, 466, 356, 303,
+#                 399, 382, 362, 521, 23, 489, 445,
+#                 318, 380, 55, 574, 515, 110, 310,
+#                 387, 491, 328, 73]
 
-  # tw_duration is the width of the time windows.
-  #tw_duration = 2150
+# tw_duration is the width of the time windows.
+#tw_duration = 2150
 
-  # In this example, the width is the same at each location, so we define the end times to be
-  # start times + tw_duration. For problems in which the time window widths vary by location,
-  # you can explicitly define the list of end_times, as we have done for start_times.
+# In this example, the width is the same at each location, so we define the end times to be
+# start times + tw_duration. For problems in which the time window widths vary by location,
+# you can explicitly define the list of end_times, as we have done for start_times.
 
 if __name__ == '__main__':
   main()
