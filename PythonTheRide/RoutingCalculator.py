@@ -13,18 +13,17 @@
 # limitations under the License.
 
 import ortools
-
+import parser
 import math
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
-    # Manhattan distance
+       # Manhattan distance
     dist = abs(x1 - x2) + abs(y1 - y2)
 
     return dist
-
 
 # converts the given time in seconds to a string military time hour, minutes
 def secondsToTime(seconds):
@@ -33,33 +32,18 @@ def secondsToTime(seconds):
     minutesRounded = minutes % 60
     time = 'AM'
 
-    if hours >= 12:
+    if(hours >= 12):
         time = 'PM'
         hours = hours % 12
-    if hours == 0:
+    if (hours == 0):
         hours = 12
-    if minutesRounded < 10:
+    if(minutesRounded < 10):
         minutesRounded = '0' + str(minutesRounded)
 
     return ('{0}:{1} {2}'.format(hours, minutesRounded, time))
 
 
-def time_to_seconds(time):
-    array = time.split()
-    time = array[0]
-    pm = array[1] == 'PM'
-    time = time.split(":")
-
-    hour = int(time[0])
-    minutes = int(time[1])
-
-    if pm and hour != 12:
-        hour = int(hour) + 12
-    if hour == 12 and not pm:
-        hour = 0
-
-    return hour * 60 * 60 + minutes * 60
-
+# Distance callback
 class CreateDistanceCallback(object):
   """Create callback to calculate distances and travel times between points."""
 
@@ -91,6 +75,7 @@ class CreateDemandCallback(object):
   def Demand(self, from_node, to_node):
     return self.matrix[from_node]
 
+
 # Service time (proportional to demand) callback.
 class CreateServiceTimeCallback(object):
   """Create callback to get time windows at each location."""
@@ -101,6 +86,8 @@ class CreateServiceTimeCallback(object):
 
   def ServiceTime(self, from_node, to_node):
     return int(self.matrix[from_node] * self.time_per_demand_unit)
+
+
 # Create the travel time callback (equals distance divided by speed).
 class CreateTravelTimeCallback(object):
   """Create callback to get travel times between locations."""
@@ -113,6 +100,8 @@ class CreateTravelTimeCallback(object):
     travel_time = self.dist_callback(from_node, to_node) / self.speed
     return int(travel_time)
 # Create total_time callback (equals service time plus travel time).
+
+
 class CreateTotalTimeCallback(object):
   """Create callback to get total times between locations."""
 
@@ -124,6 +113,8 @@ class CreateTotalTimeCallback(object):
     service_time = self.service_time_callback(from_node, to_node)
     travel_time = self.travel_time_callback(from_node, to_node)
     return service_time + travel_time
+
+
 def main():
   # Create the data.
   data = create_data_array()
@@ -133,7 +124,7 @@ def main():
   end_times = data[3]
   num_locations = len(locations)
   depot = 0
-  num_vehicles = 10
+  num_vehicles = 400
   search_time_limit = 400000
 
   # Create routing model.
@@ -270,7 +261,12 @@ def main():
 
 
 def create_data_array():
+    data = parser.AllTrips('MockData.csv')
+    locations = data.locations
+    start_times = data.starttimes
+    end_times = data.endtimes
     # these will get bunched into one
+    """
     locations = [[42.335461, -71.10731299999999],
                  [42.387969, -71.12912419999999],
                  [42.3895516, -71.1299089],
@@ -298,38 +294,36 @@ def create_data_array():
                    time_to_seconds("12:01 PM"), time_to_seconds("1:30 PM"),
                    time_to_seconds("2:01 PM"), time_to_seconds("2:31 PM"),
                    time_to_seconds("3:30 PM"), time_to_seconds("4:15 PM")]
-
+    """
     tw_duration = 0
-    demands = [1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1]
-    end_times = [0] * len(start_times)
-
-    for i in range(len(start_times)):
-        end_times[i] = start_times[i] + tw_duration
+    demands = data.demands
     data = [locations, demands, start_times, end_times]
 
     return data
 
+
+
 # locations = [[820, 760], [960, 440], [500, 50], [490, 80], [130, 70], [290, 890], [580, 300],
-#              [840, 390], [140, 240], [120, 390], [30, 820], [50, 100], [980, 520], [840, 250],
-#              [610, 590], [10, 650], [880, 510], [910, 20], [190, 320], [930, 30], [500, 930],
-#              [980, 140], [50, 420], [420, 90], [610, 620], [90, 970], [800, 550], [570, 690],
-#              [230, 150], [200, 700], [850, 600], [980, 50]]
-#
-# demands =  [0, 19, 21, 6, 19, 7, 12, 16, 6, 16, 8, 14, 21, 16, 3, 22, 18,
-#            19, 1, 24, 8, 12, 4, 8, 24, 24, 2, 20, 15, 2, 14, 9]
-#
-# start_times =  [0, 508, 103, 493, 225, 531, 89,
-#                 565, 540, 108, 602, 466, 356, 303,
-#                 399, 382, 362, 521, 23, 489, 445,
-#                 318, 380, 55, 574, 515, 110, 310,
-#                 387, 491, 328, 73]
+  #              [840, 390], [140, 240], [120, 390], [30, 820], [50, 100], [980, 520], [840, 250],
+  #              [610, 590], [10, 650], [880, 510], [910, 20], [190, 320], [930, 30], [500, 930],
+  #              [980, 140], [50, 420], [420, 90], [610, 620], [90, 970], [800, 550], [570, 690],
+  #              [230, 150], [200, 700], [850, 600], [980, 50]]
+  #
+  # demands =  [0, 19, 21, 6, 19, 7, 12, 16, 6, 16, 8, 14, 21, 16, 3, 22, 18,
+  #            19, 1, 24, 8, 12, 4, 8, 24, 24, 2, 20, 15, 2, 14, 9]
+  #
+  # start_times =  [0, 508, 103, 493, 225, 531, 89,
+  #                 565, 540, 108, 602, 466, 356, 303,
+  #                 399, 382, 362, 521, 23, 489, 445,
+  #                 318, 380, 55, 574, 515, 110, 310,
+  #                 387, 491, 328, 73]
 
-# tw_duration is the width of the time windows.
-#tw_duration = 2150
+  # tw_duration is the width of the time windows.
+  #tw_duration = 2150
 
-# In this example, the width is the same at each location, so we define the end times to be
-# start times + tw_duration. For problems in which the time window widths vary by location,
-# you can explicitly define the list of end_times, as we have done for start_times.
+  # In this example, the width is the same at each location, so we define the end times to be
+  # start times + tw_duration. For problems in which the time window widths vary by location,
+  # you can explicitly define the list of end_times, as we have done for start_times.
 
 if __name__ == '__main__':
   main()

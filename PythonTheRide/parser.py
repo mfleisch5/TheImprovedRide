@@ -1,4 +1,5 @@
 import pandas
+from geopy.distance import great_circle
 
 
 def time_to_seconds(time):
@@ -51,8 +52,10 @@ class Trip:
             self.latestDropoff = time_to_seconds(self.times)
 
     def time_for_travel(self):
-        return (abs(self.pickupcoords[0] - self.pickupcoords[1]) + abs(self.dropoffcoords[0] - self.dropoffcoords[1])) \
-               / (25 / 600)
+        s = great_circle(self.pickupcoords, self.dropoffcoords).miles * 3600 / 25
+        if s < 100:
+            print(self.PickupAddress, self.DropoffAddress)
+        return great_circle(self.pickupcoords, self.dropoffcoords).miles * 3600 / 25
 
 
 class AllTrips:
@@ -62,16 +65,15 @@ class AllTrips:
             self.trips.append(Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickFullAddress'],
                             trip['DropFullAddress'], tuple(float(geo) for geo in trip['PickGeo'].split(',')),
                         tuple(float(geo) for geo in trip['DropGeo'].split(','))))
-
         self.locations = [pickup for trip in self.trips for pickup in [trip.pickupcoords, trip.dropoffcoords]]
         self.starttimes = [int(time) for trip in self.trips for time in [trip.earliestPickup, trip.earliestDropoff]]
         self.endtimes = [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]
+        self.demands = [demand for _ in self.trips for demand in [1, -1]]
 
     def testIt(self):
-        print(self.locations, self.starttimes, self.endtimes, sep='\n')
-        print([a[1] - a[0] for a in zip(self.starttimes, self.endtimes)])
+        print(self.locations, self.starttimes, self.endtimes, self.demands, sep='\n')
+        print(len(self.locations), len(self.starttimes), len(self.endtimes), len(self.demands))
 
 
 trips = AllTrips('MockData.csv')
-trips.testIt()
 
