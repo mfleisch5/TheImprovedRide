@@ -49,7 +49,7 @@ class CreateDistanceCallback(object):
 
   def __init__(self, locations):
     """Initialize distance array."""
-    num_locations = len(locations)
+    num_locations = 12
     self.matrix = {}
 
     for from_node in range(num_locations):
@@ -198,6 +198,7 @@ def main():
     for location in range(1, num_locations):
       start = start_times[location]
       end = end_times[location]
+      print(start, end)
       time_dimension.CumulVar(location).SetRange(start, end)
 
 
