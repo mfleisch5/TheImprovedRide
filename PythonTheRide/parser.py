@@ -57,7 +57,7 @@ class Trip:
     def valid_trip(self):
         valid = lambda x, y: 41 < x < 43.5 and -72.5 < y < - 70.5
         return valid(self.pickupcoords[0], self.pickupcoords[1]) and \
-                valid(self.dropoffcoords[0], self.dropoffcoords[1])
+               valid(self.dropoffcoords[0], self.dropoffcoords[1])
 
 
 class AllTrips:
@@ -65,7 +65,7 @@ class AllTrips:
         self.trips = []
         for i, trip in pandas.read_csv(infile).iterrows():
             geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickFullAddress'],
-                            trip['DropFullAddress'], trip['PickGeo'], trip['DropGeo'])
+                           trip['DropFullAddress'], trip['PickGeo'], trip['DropGeo'])
             if geoTrip.valid_trip():
                 self.trips.append(geoTrip)
         self.locations = [pickup for trip in self.trips for pickup in [trip.pickupcoords, trip.dropoffcoords]]
@@ -74,11 +74,5 @@ class AllTrips:
         self.demands = [demand for _ in self.trips for demand in [1, -1]]
 
     def testIt(self):
-        #print(self.locations, self.starttimes, self.endtimes, self.demands, sep='\n')
         for i in range(0, len(self.locations)):
-            if self.starttimes[i] < 0:
-                print(self.trips[int(i / 2)].PickupAddress)
-                print(self.trips[int(i / 2)].dropoffcoords)
-                print(self.starttimes[i])
-                print(self.starttimes[i + 1])
-                print(self.endtimes[i + 1])
+            pass
