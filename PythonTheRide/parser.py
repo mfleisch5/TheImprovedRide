@@ -82,9 +82,3 @@ class AllTrips:
                 print(self.starttimes[i])
                 print(self.starttimes[i + 1])
                 print(self.endtimes[i + 1])
-
-
-
-s = AllTrips('MockData.csv')
-
-s.testIt()
