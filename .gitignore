@@ -1,3 +1,5 @@
 .DS_Store
-Source/TheRideRouteCalculator/out
-Source/.idea
+JavaTheRide
+PythonTheRide/.idea
+ortools_examples
+PythonTheRide/__pycache__/
