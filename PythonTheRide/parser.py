@@ -1,5 +1,6 @@
-import pandas, json
+import pandas, json, os
 from geopy.distance import great_circle
+from urllib import request as req
 
 
 def time_to_seconds(time):
@@ -72,16 +73,16 @@ class Trip:
                valid(self.dropoffcoords[0], self.dropoffcoords[1])
 
     def geo_lookup(self, geo_dict):
-        full_pick = " ".join([self.p_num, self.p_street, self.p_city, self.p_zip])
-        full_drop = " ".join([self.d_num, self.d_street, self.d_city, self.d_zip])
+        full_pick = " ".join([str(self.p_num), self.p_street, self.p_city, str(self.p_zip)])
+        full_drop = " ".join([str(self.d_num), self.d_street, self.d_city, str(self.d_zip)])
         if full_pick in geo_dict:
-            self.pickupcoords = geo_dict[full_pick]
+            self.pickupcoords = tuple(float(geo) for geo in geo_dict[full_pick].split(','))
         else:
-            self.pickupcoords = lookup(full_pick, self.p_num, self.p_street, self.p_city, self.p_zip, geo_dict)
+            self.pickupcoords = Trip.lookup(full_pick, self.p_num, self.p_street, self.p_city, self.p_zip, geo_dict)
         if full_drop in geo_dict:
-            self.dropoffcoords = geo_dict[full_drop]
+            self.dropoffcoords = tuple(float(geo) for geo in geo_dict[full_drop].split(','))
         else:
-            self.dropoffcoords = lookup(full_drop, self.d_num, self.d_street, self.d_city, self.d_zip, geo_dict)
+            self.dropoffcoords = Trip.lookup(full_drop, self.d_num, self.d_street, self.d_city, self.d_zip, geo_dict)
 
     @staticmethod
     def lookup(addr, num, street, city, code, geo_dict):
@@ -119,7 +120,7 @@ class AllTrips:
             if geoTrip.valid_trip():
                 self.trips.append(geoTrip)
         with open(self.geo_file, 'w') as gf:
-            json.dump(self.geo_data, gf)
+            json.dump(self.geo_data, gf, indent=4)
 
         self.locations = [pickup for trip in self.trips for pickup in [trip.pickupcoords, trip.dropoffcoords]]
         self.starttimes = [int(time) for trip in self.trips for time in [trip.earliestPickup, trip.earliestDropoff]]
@@ -129,3 +130,4 @@ class AllTrips:
     def testIt(self):
         for i in range(0, len(self.locations)):
             pass
+        print(len(self.locations), len(self.starttimes), len(self.endtimes), sep='\n')
