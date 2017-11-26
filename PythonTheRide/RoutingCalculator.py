@@ -18,14 +18,13 @@ import math
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 from parser import time_to_seconds
+from geopy.distance import great_circle
 
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
-    # Manhattan distance
-    dist = abs(x1 - x2) + abs(y1 - y2)
-
-    return dist
+    # Great-Circle distance
+    return great_circle((x1, y1), (x2, y2)).miles
 
 
 # converts the given time in seconds to a string military time hour, minutes
@@ -126,9 +125,9 @@ def main():
     demands = data[1]
     start_times = data[2]
     end_times = data[3]
-    num_locations = 40
+    num_locations = 100
     depot = 0
-    num_vehicles = 20
+    num_vehicles = 30
 
     # Create routing model.
     if num_locations > 0:
@@ -151,12 +150,8 @@ def main():
         # ensure that each node pair is a neighbor
 
         # def AddPickupAndDelivery(self, node1: 'operations_research::RoutingModel::NodeIndex', node2: 'operations_research::RoutingModel::NodeIndex') -> "void":
-        routing.AddPickupAndDelivery(0, 1)
-        routing.AddPickupAndDelivery(2, 3)
-        routing.AddPickupAndDelivery(4, 5)
-        routing.AddPickupAndDelivery(6, 7)
-        routing.AddPickupAndDelivery(8, 9)
-        routing.AddPickupAndDelivery(10, 11)
+        for i in range(2, 100, 2):
+            routing.AddPickupAndDelivery(i - 1, i)
 
         # Add a dimension for demand.
         slack_max = 0
@@ -194,7 +189,6 @@ def main():
                              horizon,
                              fix_start_cumul_to_zero,
                              time)
-        # routing.AddDimension()
 
         # Add time window constraints.
         time_dimension = routing.GetDimensionOrDie(time)
@@ -202,7 +196,6 @@ def main():
             start = start_times[location]
             end = end_times[location]
             time_dimension.CumulVar(location).SetRange(start, end)
-            print(time_dimension)
 
         # Solve displays a solution if any.
         assignment = routing.SolveWithParameters(search_parameters)
