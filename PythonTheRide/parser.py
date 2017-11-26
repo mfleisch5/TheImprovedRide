@@ -69,8 +69,7 @@ class Trip:
         if self.pickupcoords is None or self.dropoffcoords is None:
             return False
         valid = lambda x, y: 41 < x < 43.5 and -72.5 < y < - 70.5
-        return valid(self.pickupcoords[0], self.pickupcoords[1]) and \
-               valid(self.dropoffcoords[0], self.dropoffcoords[1])
+        return valid(self.pickupcoords[0], self.pickupcoords[1]) and valid(self.dropoffcoords[0], self.dropoffcoords[1])
 
     def geo_lookup(self, geo_dict):
         full_pick = " ".join([str(self.p_num), self.p_street, self.p_city, str(self.p_zip)])
