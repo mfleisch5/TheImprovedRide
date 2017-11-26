@@ -1,4 +1,4 @@
-import pandas
+import pandas, json
 from geopy.distance import great_circle
 
 
@@ -24,15 +24,25 @@ class Trip:
     Create callback to calculate distances and travel times between points.
     """
 
-    def __init__(self, anchor, times, totalNumPassengers, PickupAddress, DropoffAddress, PickupCoords, DropoffCoords):
+    def __init__(self, anchor, times, passengers, p_num, p_street, p_city, p_zip, d_num, d_street, d_city,
+                 d_zip, geo_dict):
         self.anchor = anchor
         self.times = times
-        self.totalNumPassengers = totalNumPassengers
-        self.PickupAddress = PickupAddress
-        self.DropoffAddress = DropoffAddress
-        self.pickupcoords = tuple(float(geo) for geo in PickupCoords.split(','))
-        self.dropoffcoords = tuple(float(geo) for geo in DropoffCoords.split(','))
+        self.passengers = passengers
+        self.p_num = p_num
+        self.p_street = p_street
+        self.p_city = p_city
+        self.p_zip = p_zip
+        self.d_num = d_num
+        self.d_street = d_street
+        self.d_city = d_city
+        self.d_zip = d_zip
+        self.geo_lookup(geo_dict)
 
+        if self.pickupcoords is not None and self.dropoffcoords is not None:
+            self.set_times()
+
+    def set_times(self):
         if self.anchor == "P":
             # specified pickup time, 5 minutes early.
             self.earliestPickup = time_to_seconds(str(self.times)) - 300
@@ -55,19 +65,62 @@ class Trip:
         return great_circle(self.pickupcoords, self.dropoffcoords).miles * 3600 / 25
 
     def valid_trip(self):
+        if self.pickupcoords is None or self.dropoffcoords is None:
+            return False
         valid = lambda x, y: 41 < x < 43.5 and -72.5 < y < - 70.5
         return valid(self.pickupcoords[0], self.pickupcoords[1]) and \
                valid(self.dropoffcoords[0], self.dropoffcoords[1])
 
+    def geo_lookup(self, geo_dict):
+        full_pick = " ".join([self.p_num, self.p_street, self.p_city, self.p_zip])
+        full_drop = " ".join([self.d_num, self.d_street, self.d_city, self.d_zip])
+        if full_pick in geo_dict:
+            self.pickupcoords = geo_dict[full_pick]
+        else:
+            self.pickupcoords = lookup(full_pick, self.p_num, self.p_street, self.p_city, self.p_zip, geo_dict)
+        if full_drop in geo_dict:
+            self.dropoffcoords = geo_dict[full_drop]
+        else:
+            self.dropoffcoords = lookup(full_drop, self.d_num, self.d_street, self.d_city, self.d_zip, geo_dict)
+
+    @staticmethod
+    def lookup(addr, num, street, city, code, geo_dict):
+        try:
+            address_url = "https://geocoding.geo.census.gov/geocoder/locations/address?" + \
+                          "street=" + str(num) + "+" + street.replace(" ", "+") + "&city=" + city + "&zip=" + \
+                          str(code) + "&benchmark=9&format=json"
+            geo_data = json.load(req.urlopen(address_url))['result']
+        except Exception as e:
+            print(e, addr)
+            return None
+        if len(geo_data['addressMatches']) == 0:
+            print(addr, ': Failure')
+            return None
+        print(addr, ': Success')
+        location = geo_data['addressMatches'][0]['coordinates']
+        latlong = ','.join([str(location['y']), str(location['x'])])
+        geo_dict[addr] = latlong
+        return tuple(float(geo) for geo in latlong.split(','))
+
 
 class AllTrips:
-    def __init__(self, infile):
+    def __init__(self, infile, geo_file):
         self.trips = []
+        self.geo_file = geo_file
+        if os.path.exists(self.geo_file):
+            with open(self.geo_file, 'r') as gf:
+                self.geo_data = json.load(gf)
+        else:
+            self.geo_data = dict()
         for i, trip in pandas.read_csv(infile).iterrows():
-            geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickFullAddress'],
-                           trip['DropFullAddress'], trip['PickGeo'], trip['DropGeo'])
+            geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickHouseNumber'],
+                           trip['PickAddress1'], trip['Pickcity'], trip['pickzip'], trip['DropHouseNumber'],
+                           trip['DropAddress1'], trip['Dropcity'], trip['DropZip'], self.geo_data)
             if geoTrip.valid_trip():
                 self.trips.append(geoTrip)
+        with open(self.geo_file, 'w') as gf:
+            json.dump(self.geo_data, gf)
+
         self.locations = [pickup for trip in self.trips for pickup in [trip.pickupcoords, trip.dropoffcoords]]
         self.starttimes = [int(time) for trip in self.trips for time in [trip.earliestPickup, trip.earliestDropoff]]
         self.endtimes = [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]
