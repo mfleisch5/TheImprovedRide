@@ -115,9 +115,9 @@ class CreateTotalTimeCallback(object):
         return service_time + travel_time
 
 
-def main():
+def main(infile, geo_file, failure_file):
     # Create the data.
-    data = create_data_array()
+    data = create_data_array(infile, geo_file, failure_file)
     locations = data[0]
     demands = data[1]
     start_times = data[2]
@@ -255,9 +255,8 @@ def main():
         print('Specify an instance greater than 0.')
 
 
-
-def create_data_array():
-    data = parser.AllTrips('../Data.csv', 'geocodes.json', 'failures.json')
+def create_data_array(infile, geo_file, failure_file):
+    data = parser.AllTrips(infile, geo_file, failure_file)
     locations = data.locations
     start_times = data.starttimes
     end_times = data.endtimes
@@ -266,6 +265,3 @@ def create_data_array():
     data_array = [locations, demands, start_times, end_times]
 
     return data_array
-
-if __name__ == '__main__':
-    main()
