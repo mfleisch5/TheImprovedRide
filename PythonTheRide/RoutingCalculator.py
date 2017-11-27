@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ortools
 import parser
-import math
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
-from parser import time_to_seconds
 from geopy.distance import great_circle
 
 
@@ -52,7 +49,7 @@ class CreateDistanceCallback(object):
 
     def __init__(self, locations):
         """Initialize distance array."""
-        num_locations = len(locations)
+        num_locations = 100
         self.matrix = {}
 
         for from_node in range(num_locations):
@@ -75,7 +72,7 @@ class CreateDemandCallback(object):
     def __init__(self, demands):
         self.matrix = demands
 
-    def Demand(self, from_node, to_node):
+    def Demand(self, from_node):
         return self.matrix[from_node]
 
 
@@ -155,14 +152,14 @@ def main():
 
         # Add a dimension for demand.
         slack_max = 0
-        vehicle_capacity = 100  # what is the max of the capacity? 8?
+        vehicle_capacity = 8  # what is the max of the capacity? 8?
         fix_start_cumul_to_zero = True
         demand = "Demand"
         routing.AddDimension(demands_callback, slack_max, vehicle_capacity,
                              fix_start_cumul_to_zero, demand)
 
         # Adding capacity dimension constraints.
-        VehicleCapacity = 100
+        VehicleCapacity = 8
         NullCapacitySlack = 0
         fix_start_cumul_to_zero = True
         capacity = "Capacity"
@@ -170,7 +167,7 @@ def main():
         routing.AddDimension(demands_callback, NullCapacitySlack, VehicleCapacity,
                              fix_start_cumul_to_zero, capacity)
         # Add time dimension.
-        time_per_demand_unit = 3
+        time_per_demand_unit = 1
         horizon = 24 * 3600
         time = "Time"
         speed = 1
@@ -225,10 +222,7 @@ def main():
                                 tmax=secondsToTime(assignment.Max(time_var)))
                     else:
 
-                        if node_index % 2 == 1:
-                            pickup_dropoff1 = str('Dropoff')
-                        else:
-                            pickup_dropoff1 = str('Pickup')
+                        pickup_dropoff1 = str('Dropoff') if node_index % 2 == 1 else str('Pickup')
 
                         plan_output += \
                             " {pickup_dropoff}, RideID {node_index}, Load({load}) Time({tmin}, {tmax}) -> ".format(  #
@@ -258,7 +252,7 @@ def main():
 
 
 def create_data_array():
-    data = parser.AllTrips('MockData.csv')
+    data = parser.AllTrips('../Data.csv', 'geocodes.json')
     locations = data.locations
     start_times = data.starttimes
     end_times = data.endtimes
