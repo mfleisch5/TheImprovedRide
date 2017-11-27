@@ -26,7 +26,7 @@ class Trip:
     """
 
     def __init__(self, anchor, times, passengers, p_num, p_street, p_city, p_zip, d_num, d_street, d_city,
-                 d_zip, geo_dict):
+                 d_zip, geo_dict, fail_set):
         self.anchor = anchor
         self.times = times
         self.passengers = passengers
@@ -38,7 +38,7 @@ class Trip:
         self.d_street = d_street
         self.d_city = d_city
         self.d_zip = d_zip
-        self.geo_lookup(geo_dict)
+        self.geo_lookup(geo_dict, fail_set)
 
         if self.pickupcoords is not None and self.dropoffcoords is not None:
             self.set_times()
@@ -71,20 +71,26 @@ class Trip:
         valid = lambda x, y: 41 < x < 43.5 and -72.5 < y < - 70.5
         return valid(self.pickupcoords[0], self.pickupcoords[1]) and valid(self.dropoffcoords[0], self.dropoffcoords[1])
 
-    def geo_lookup(self, geo_dict):
+    def geo_lookup(self, geo_dict, fail_set):
         full_pick = " ".join([str(self.p_num), self.p_street, self.p_city, str(self.p_zip)])
         full_drop = " ".join([str(self.d_num), self.d_street, self.d_city, str(self.d_zip)])
         if full_pick in geo_dict:
             self.pickupcoords = tuple(float(geo) for geo in geo_dict[full_pick].split(','))
+        elif full_pick in fail_set:
+            self.pickupcoords = None
         else:
-            self.pickupcoords = Trip.lookup(full_pick, self.p_num, self.p_street, self.p_city, self.p_zip, geo_dict)
+            self.pickupcoords = Trip.lookup(full_pick, self.p_num, self.p_street, self.p_city, self.p_zip, geo_dict,
+                                            fail_set)
         if full_drop in geo_dict:
             self.dropoffcoords = tuple(float(geo) for geo in geo_dict[full_drop].split(','))
+        elif full_drop in fail_set:
+            self.dropoffcoords = None
         else:
-            self.dropoffcoords = Trip.lookup(full_drop, self.d_num, self.d_street, self.d_city, self.d_zip, geo_dict)
+            self.dropoffcoords = Trip.lookup(full_drop, self.d_num, self.d_street, self.d_city, self.d_zip, geo_dict,
+                                             fail_set)
 
     @staticmethod
-    def lookup(addr, num, street, city, code, geo_dict):
+    def lookup(addr, num, street, city, code, geo_dict, failure_set):
         try:
             address_url = "https://geocoding.geo.census.gov/geocoder/locations/address?" + \
                           "street=" + str(num) + "+" + street.replace(" ", "+") + "&city=" + city + "&zip=" + \
@@ -95,6 +101,7 @@ class Trip:
             return None
         if len(geo_data['addressMatches']) == 0:
             print(addr, ': Failure')
+            failure_set.add(addr)
             return None
         print(addr, ': Success')
         location = geo_data['addressMatches'][0]['coordinates']
@@ -104,23 +111,30 @@ class Trip:
 
 
 class AllTrips:
-    def __init__(self, infile, geo_file):
+    def __init__(self, infile, geo_file, fail_file):
         self.trips = []
         self.geo_file = geo_file
+        self.fail_file = fail_file
         if os.path.exists(self.geo_file):
             with open(self.geo_file, 'r') as gf:
                 self.geo_data = json.load(gf)
         else:
             self.geo_data = dict()
+        if os.path.exists(self.fail_file):
+            with open(self.fail_file, 'r') as ff:
+                self.fail_set = set(json.load(ff))
+        else:
+            self.fail_set = set()
         for i, trip in pandas.read_csv(infile).iterrows():
             geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickHouseNumber'],
                            trip['PickAddress1'], trip['Pickcity'], trip['pickzip'], trip['DropHouseNumber'],
-                           trip['DropAddress1'], trip['Dropcity'], trip['DropZip'], self.geo_data)
+                           trip['DropAddress1'], trip['Dropcity'], trip['DropZip'], self.geo_data, self.fail_set)
             if geoTrip.valid_trip():
                 self.trips.append(geoTrip)
         with open(self.geo_file, 'w') as gf:
             json.dump(self.geo_data, gf, indent=4)
-
+        with open(self.fail_file, 'w') as ff:
+            json.dump(list(self.fail_set), ff)
         self.locations = [pickup for trip in self.trips for pickup in [trip.pickupcoords, trip.dropoffcoords]]
         self.starttimes = [int(time) for trip in self.trips for time in [trip.earliestPickup, trip.earliestDropoff]]
         self.endtimes = [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]

@@ -72,7 +72,7 @@ class CreateDemandCallback(object):
     def __init__(self, demands):
         self.matrix = demands
 
-    def Demand(self, from_node):
+    def Demand(self, from_node, to_node):
         return self.matrix[from_node]
 
 
@@ -252,7 +252,7 @@ def main():
 
 
 def create_data_array():
-    data = parser.AllTrips('../Data.csv', 'geocodes.json')
+    data = parser.AllTrips('../Data.csv', 'geocodes.json', 'failures.json')
     locations = data.locations
     start_times = data.starttimes
     end_times = data.endtimes
