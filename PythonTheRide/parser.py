@@ -44,6 +44,10 @@ class Trip:
             self.set_times()
 
     def set_times(self):
+        """
+        Sets the earliest and latest pickup and drop off times as long as coordinates are valid
+        :return:
+        """
         if self.anchor == "P":
             # specified pickup time, 5 minutes early.
             self.earliestPickup = time_to_seconds(str(self.times)) - 300

@@ -197,6 +197,7 @@ def main():
 
         # Solve displays a solution if any.
         assignment = routing.SolveWithParameters(search_parameters)
+        routes = ""
         if assignment:
             size = len(locations)
             # Solution cost.
@@ -245,16 +246,18 @@ def main():
                 # tmin=secondsToTime(assignment.Min(time_var)),
                 # tmax=secondsToTime(assignment.Max(time_var)))
                 print(plan_output)
+                routes += plan_output + '\n'
                 print("\n")
+            return routes
         else:
             print('No solution found.')
     else:
         print('Specify an instance greater than 0.')
 
 
+
 def create_data_array():
     data = parser.AllTrips('../Data.csv', 'geocodes.json', 'failures.json')
-    data.testIt()
     locations = data.locations
     start_times = data.starttimes
     end_times = data.endtimes
