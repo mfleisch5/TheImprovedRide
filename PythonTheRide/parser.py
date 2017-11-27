@@ -98,6 +98,7 @@ class Trip:
             geo_data = json.load(req.urlopen(address_url))['result']
         except Exception as e:
             print(e, addr)
+            failure_set.add(addr)
             return None
         if len(geo_data['addressMatches']) == 0:
             print(addr, ': Failure')
@@ -125,7 +126,7 @@ class AllTrips:
                 self.fail_set = set(json.load(ff))
         else:
             self.fail_set = set()
-        for i, trip in pandas.read_csv(infile).iterrows():
+        for i, trip in pandas.read_csv(infile).dropna(subset=['PickHouseNumber', 'DropHouseNumber']).iterrows():
             geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickHouseNumber'],
                            trip['PickAddress1'], trip['Pickcity'], trip['pickzip'], trip['DropHouseNumber'],
                            trip['DropAddress1'], trip['Dropcity'], trip['DropZip'], self.geo_data, self.fail_set)

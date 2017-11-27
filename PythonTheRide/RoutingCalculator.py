@@ -124,14 +124,17 @@ def main():
     end_times = data[3]
     num_locations = 100
     depot = 0
-    num_vehicles = 30
+    num_vehicles = 150
 
     # Create routing model.
     if num_locations > 0:
 
         routing = pywrapcp.RoutingModel(num_locations, num_vehicles, depot)
         search_parameters = pywrapcp.RoutingModel.DefaultSearchParameters()
-
+        """
+        for i in range(, num_locations, 2):
+            routing.AddPickupAndDelivery(i - 1, i)
+        """
         # Setting first solution heuristic: the
         # method for finding a first solution to the problem.
         search_parameters.first_solution_strategy = (
@@ -143,13 +146,10 @@ def main():
         routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
         demands_at_locations = CreateDemandCallback(demands)
         demands_callback = demands_at_locations.Demand
-
+        """
         # ensure that each node pair is a neighbor
-
         # def AddPickupAndDelivery(self, node1: 'operations_research::RoutingModel::NodeIndex', node2: 'operations_research::RoutingModel::NodeIndex') -> "void":
-        for i in range(2, 100, 2):
-            routing.AddPickupAndDelivery(i - 1, i)
-
+        """
         # Add a dimension for demand.
         slack_max = 0
         vehicle_capacity = 8  # what is the max of the capacity? 8?
@@ -186,6 +186,7 @@ def main():
                              horizon,
                              fix_start_cumul_to_zero,
                              time)
+
 
         # Add time window constraints.
         time_dimension = routing.GetDimensionOrDie(time)
@@ -253,6 +254,7 @@ def main():
 
 def create_data_array():
     data = parser.AllTrips('../Data.csv', 'geocodes.json', 'failures.json')
+    data.testIt()
     locations = data.locations
     start_times = data.starttimes
     end_times = data.endtimes
