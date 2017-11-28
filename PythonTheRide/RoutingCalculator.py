@@ -27,7 +27,7 @@ def distance(x1, y1, x2, y2):
     return great_circle((x1, y1), (x2, y2)).miles
 
 
-LOCATIONS = 150
+LOCATIONS = 151
 
 
 # converts the given time in seconds to a string military time hour, minutes
@@ -173,48 +173,30 @@ def main(infile, geo_file, failure_file):
         print(t.clock())
         assignment = routing.SolveWithParameters(search_parameters)
         print(t.clock())
-        routes = ""
         if assignment:
             # Solution cost.
             # Inspect solution.
+            routes = RoutingCalculator()
             capacity_dimension = routing.GetDimensionOrDie(capacity)
             time_dimension = routing.GetDimensionOrDie(time)
 
             for vehicle_nbr in range(num_vehicles):
                 if not routing.IsVehicleUsed(assignment, vehicle_nbr):
                     continue
-                index = routing.Start(vehicle_nbr)
-                plan_output = 'Route {0}:'.format(vehicle_nbr + 1)
+                route = Route()
+                index = assignment.Value(routing.NextVar(routing.Start(vehicle_nbr)))
 
                 while not routing.IsEnd(index):
                     node_index = routing.IndexToNode(index)
                     load_var = capacity_dimension.CumulVar(index)
                     time_var = time_dimension.CumulVar(index)
-
-                    if node_index == 0:
-                        plan_output += \
-                            " Depot ->  -> ".format(  # {node_index} Load({load}) Time({tmin}, {tmax})
-                                node_index=node_index,
-                                load=assignment.Value(load_var),
-                                tmin=secondsToTime(assignment.Min(time_var)),  # str
-                                tmax=secondsToTime(assignment.Max(time_var)))
-                    else:
-
-                        pickup_dropoff1 = 'Pickup' if node_index % 2 == 1 else 'Dropoff'
-
-                        plan_output += \
-                            " {pickup_dropoff}, RideID {node_index}, Load({load}) Time({tmin}, {tmax}) -> ".format(  #
-                                pickup_dropoff=pickup_dropoff1,
-                                node_index=node_index,
-                                load=assignment.Value(load_var),
-                                tmin=secondsToTime(assignment.Min(time_var)),
-                                tmax=secondsToTime(assignment.Max(time_var)))
+                    route.add_stop(Stop(node_index, node_index % 2 == 1,
+                                        (assignment.Min(time_var), assignment.Max(time_var)),
+                                        assignment.Value(load_var)))
 
                     index = assignment.Value(routing.NextVar(index))
-                plan_output += " Depot"
-                print(plan_output)
-                routes += plan_output + '\n'
-                print("\n")
+                routes.add_route(route)
+            print(routes)
             return routes
         else:
             print('No solution found.')
@@ -236,10 +218,46 @@ def create_data_array(geo_data, geo_file, failure_file):
 
     return data_array
 
+class Stop:
+    def __init__(self, id, pickup, time_window, curr_load):
+        self.id = id
+        self.pickup = pickup
+        self.time_window = time_window
+        self.curr_load = curr_load
+
+    def __str__(self):
+        return " {pickup_dropoff}, RideID {node_index}, Load({load}) Time({tmin}, {tmax})".format(  #
+                                pickup_dropoff='Pickup' if self.pickup else 'Dropoff',
+                                node_index=self.id,
+                                load=self.curr_load,
+                                tmin=secondsToTime(self.time_window[0]),
+                                tmax=secondsToTime(self.time_window[1]))
+
 
 class Route:
     def __init__(self):
-        pass
+        self.depot = None
+        self.stops = []
+
+    def add_stop(self, stop):
+        self.stops.append(stop)
+
+    def __str__(self):
+        return "Depot -> -> {0} -> Depot".format(" -> ".join([str(stop) for stop in self.stops]))
+
+
+
+
+class RoutingCalculator:
+    def __init__(self):
+        self.routes = []
+
+    def add_route(self, route):
+        self.routes.append(route)
+
+    def __str__(self):
+        return "\n\n".join(['Route {0}: {1}'.format(i + 1, str(route)) for i, route in enumerate(self.routes)])
+
 
 
 main('../Data.csv', 'geocodes.json', 'failures.json')
