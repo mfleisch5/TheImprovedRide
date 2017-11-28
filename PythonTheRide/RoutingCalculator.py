@@ -259,7 +259,9 @@ def main(infile, geo_file, failure_file):
 
 @app.route('/get', methods=['POST'])
 def create_data_array(geo_file, failure_file):
-    data = parser.AllTrips(str(flask.request.get_json()), geo_file, failure_file)
+    geo_data = str(flask.request.get_json())
+    print(geo_data)
+    data = parser.AllTrips(geo_data, geo_file, failure_file)
     locations = data.locations
     start_times = data.starttimes
     end_times = data.endtimes
