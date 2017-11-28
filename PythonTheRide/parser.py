@@ -38,6 +38,8 @@ class Trip:
         self.d_street = d_street
         self.d_city = d_city
         self.d_zip = d_zip
+        self.full_pick = " ".join([str(self.p_num), self.p_street, self.p_city, str(self.p_zip)])
+        self.full_drop = " ".join([str(self.d_num), self.d_street, self.d_city, str(self.d_zip)])
         self.geo_lookup(geo_dict, fail_set)
 
         if self.valid_trip():
@@ -76,22 +78,20 @@ class Trip:
         return valid(self.pickupcoords[0], self.pickupcoords[1]) and valid(self.dropoffcoords[0], self.dropoffcoords[1])
 
     def geo_lookup(self, geo_dict, fail_set):
-        full_pick = " ".join([str(self.p_num), self.p_street, self.p_city, str(self.p_zip)])
-        full_drop = " ".join([str(self.d_num), self.d_street, self.d_city, str(self.d_zip)])
-        if full_pick in geo_dict:
-            self.pickupcoords = tuple(float(geo) for geo in geo_dict[full_pick].split(','))
-        elif full_pick in fail_set:
+        if self.full_pick in geo_dict:
+            self.pickupcoords = tuple(float(geo) for geo in geo_dict[self.full_pick].split(','))
+        elif self.full_pick in fail_set:
             self.pickupcoords = None
         else:
-            self.pickupcoords = Trip.lookup(full_pick, self.p_num, self.p_street, self.p_city, self.p_zip, geo_dict,
-                                            fail_set)
-        if full_drop in geo_dict:
-            self.dropoffcoords = tuple(float(geo) for geo in geo_dict[full_drop].split(','))
-        elif full_drop in fail_set:
+            self.pickupcoords = Trip.lookup(self.full_pick, self.p_num, self.p_street, self.p_city, self.p_zip,
+                                            geo_dict, fail_set)
+        if self.full_drop in geo_dict:
+            self.dropoffcoords = tuple(float(geo) for geo in geo_dict[self.full_drop].split(','))
+        elif self.full_drop in fail_set:
             self.dropoffcoords = None
         else:
-            self.dropoffcoords = Trip.lookup(full_drop, self.d_num, self.d_street, self.d_city, self.d_zip, geo_dict,
-                                             fail_set)
+            self.dropoffcoords = Trip.lookup(self.full_drop, self.d_num, self.d_street, self.d_city, self.d_zip,
+                                             geo_dict, fail_set)
 
     @staticmethod
     def lookup(addr, num, street, city, code, geo_dict, failure_set):
@@ -148,6 +148,7 @@ class AllTrips:
             json.dump(list(self.fail_set), ff)
         self.locations = [[42, -71]] + [pickup for trip in self.trips for
                                         pickup in [trip.pickupcoords, trip.dropoffcoords]]
+        self.addresses = [[None]] + [addr for trip in self.trips for addr in [trip.full_pick, trip.full_drop]]
         self.starttimes = [0] + [int(time) for trip in self.trips for time
                                  in [trip.earliestPickup, trip.earliestDropoff]]
         self.endtimes = [0] + [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]

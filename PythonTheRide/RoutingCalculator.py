@@ -27,7 +27,7 @@ def distance(x1, y1, x2, y2):
     return great_circle((x1, y1), (x2, y2)).miles
 
 
-LOCATIONS = 301
+LOCATIONS = 83
 
 
 # converts the given time in seconds to a string military time hour, minutes
@@ -97,7 +97,8 @@ class CreateTravelTimeCallback(object):
 
 def main(infile, geo_file, failure_file):
     # Create the data.
-    data = create_data_array(infile, geo_file, failure_file)
+    trip_data = parser.AllTrips(infile, geo_file, failure_file)
+    data = [trip_data.locations, trip_data.demands, trip_data.starttimes, trip_data.endtimes]
     locations = data[0]
     demands = data[1]
     start_times = data[2]
@@ -124,11 +125,6 @@ def main(infile, geo_file, failure_file):
         routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
         demands_at_locations = CreateDemandCallback(demands)
         demands_callback = demands_at_locations.Demand
-        """
-        # ensure that each node pair is a neighbor
-        # def AddPickupAndDelivery(self, node1: 'operations_research::RoutingModel::NodeIndex', node2: 'operations_research::RoutingModel::NodeIndex') -> "void":
-        """
-
         # Add a dimension for demand.
         slack_max = 0
         vehicle_capacity = 8  # what is the max of the capacity? 8?
@@ -188,7 +184,7 @@ def main(infile, geo_file, failure_file):
                     node_index = routing.IndexToNode(index)
                     load_var = capacity_dimension.CumulVar(index)
                     time_var = time_dimension.CumulVar(index)
-                    route.add_stop(Stop(node_index, node_index % 2 == 1,
+                    route.add_stop(Stop(node_index, trip_data.addresses[node_index], node_index % 2 == 1,
                                         (assignment.Min(time_var), assignment.Max(time_var)),
                                         assignment.Value(load_var)))
 
@@ -205,32 +201,18 @@ def main(infile, geo_file, failure_file):
         print('Specify an instance greater than 0.')
 
 
-# @app.route('/get', methods=['POST'])
-def create_data_array(geo_data, geo_file, failure_file):
-    # geo_data = str(flask.request.get_json())
-    # print(geo_data)
-    data = parser.AllTrips(geo_data, geo_file, failure_file)
-    locations = data.locations
-    start_times = data.starttimes
-    end_times = data.endtimes
-    demands = data.demands
-
-    data_array = [locations, demands, start_times, end_times]
-
-    return data_array
-
-
 class Stop:
-    def __init__(self, id, pickup, time_window, curr_load):
+    def __init__(self, id, addr, pickup, time_window, curr_load):
         self.id = id
         self.pickup = pickup
+        self.addr = addr
         self.time_window = time_window
         self.curr_load = curr_load
 
     def __str__(self):
-        return " {pickup_dropoff}, RideID {node_index}, Load({load}) Time({tmin}, {tmax})".format(  #
+        return " {pickup_dropoff} at {addr}, Load({load}) Time({tmin}, {tmax})".format(  #
             pickup_dropoff='Pickup' if self.pickup else 'Dropoff',
-            node_index=self.id,
+            addr=self.addr,
             load=self.curr_load,
             tmin=secondsToTime(self.time_window[0]),
             tmax=secondsToTime(self.time_window[1]))
