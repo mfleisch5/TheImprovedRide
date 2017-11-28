@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import parser, time as t
+import parser
 # import flask
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
@@ -27,7 +27,7 @@ def distance(x1, y1, x2, y2):
     return great_circle((x1, y1), (x2, y2)).miles
 
 
-LOCATIONS = 151
+LOCATIONS = 301
 
 
 # converts the given time in seconds to a string military time hour, minutes
@@ -169,10 +169,8 @@ def main(infile, geo_file, failure_file):
             time_dimension.CumulVar(location).SetRange(start, end)
 
         # Solve displays a solution if any.
-
-        print(t.clock())
         assignment = routing.SolveWithParameters(search_parameters)
-        print(t.clock())
+
         if assignment:
             # Solution cost.
             # Inspect solution.
@@ -196,8 +194,11 @@ def main(infile, geo_file, failure_file):
 
                     index = assignment.Value(routing.NextVar(index))
                 routes.add_route(route)
-            print(routes)
-            return routes
+            if routes.valid():
+                print(routes)
+                return routes
+            else:
+                print("Invalid Routes")
         else:
             print('No solution found.')
     else:
@@ -218,6 +219,7 @@ def create_data_array(geo_data, geo_file, failure_file):
 
     return data_array
 
+
 class Stop:
     def __init__(self, id, pickup, time_window, curr_load):
         self.id = id
@@ -227,11 +229,11 @@ class Stop:
 
     def __str__(self):
         return " {pickup_dropoff}, RideID {node_index}, Load({load}) Time({tmin}, {tmax})".format(  #
-                                pickup_dropoff='Pickup' if self.pickup else 'Dropoff',
-                                node_index=self.id,
-                                load=self.curr_load,
-                                tmin=secondsToTime(self.time_window[0]),
-                                tmax=secondsToTime(self.time_window[1]))
+            pickup_dropoff='Pickup' if self.pickup else 'Dropoff',
+            node_index=self.id,
+            load=self.curr_load,
+            tmin=secondsToTime(self.time_window[0]),
+            tmax=secondsToTime(self.time_window[1]))
 
 
 class Route:
@@ -245,7 +247,10 @@ class Route:
     def __str__(self):
         return "Depot -> -> {0} -> Depot".format(" -> ".join([str(stop) for stop in self.stops]))
 
-
+    def valid(self):
+        pickups = [stop.id for stop in self.stops if stop.pickup]
+        dropoffs = {stop.id for stop in self.stops if not stop.pickup}
+        return {p + 1 for p in pickups} == dropoffs
 
 
 class RoutingCalculator:
@@ -258,6 +263,8 @@ class RoutingCalculator:
     def __str__(self):
         return "\n\n".join(['Route {0}: {1}'.format(i + 1, str(route)) for i, route in enumerate(self.routes)])
 
+    def valid(self):
+        return all(route.valid() for route in self.routes)
 
 
 main('../Data.csv', 'geocodes.json', 'failures.json')
