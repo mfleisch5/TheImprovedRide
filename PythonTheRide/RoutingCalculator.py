@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import parser
-import flask
+#import flask
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 from geopy.distance import great_circle
 
-app = flask.Flask(__name__)
+#app = flask.Flask(__name__)
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
@@ -139,8 +139,8 @@ def main(infile, geo_file, failure_file):
         """
         # Setting first solution heuristic: the
         # method for finding a first solution to the problem.
-        search_parameters.first_solution_strategy = (
-            routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+        #search_parameters.first_solution_strategy = (
+         #   routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
         # Callbacks to the distance function and travel time functions here.
         dist_between_locations = CreateDistanceCallback(locations)
         dist_callback = dist_between_locations.Distance
@@ -157,6 +157,7 @@ def main(infile, geo_file, failure_file):
         vehicle_capacity = 8  # what is the max of the capacity? 8?
         fix_start_cumul_to_zero = True
         demand = "Demand"
+
         routing.AddDimension(demands_callback, slack_max, vehicle_capacity,
                              fix_start_cumul_to_zero, demand)
 
@@ -172,7 +173,7 @@ def main(infile, geo_file, failure_file):
         time_per_demand_unit = 1
         horizon = 24 * 3600
         time = "Time"
-        speed = 1
+        speed = 25
 
         service_times = CreateServiceTimeCallback(demands, time_per_demand_unit)
         service_time_callback = service_times.ServiceTime
@@ -189,13 +190,16 @@ def main(infile, geo_file, failure_file):
                              fix_start_cumul_to_zero,
                              time)
 
-
         # Add time window constraints.
         time_dimension = routing.GetDimensionOrDie(time)
         for location in range(1, num_locations):
             start = start_times[location]
             end = end_times[location]
             time_dimension.CumulVar(location).SetRange(start, end)
+
+
+        routing.AddPickupAndDelivery(4, 5)
+        #routing.AddPickupAndDelivery(20, 21)
 
         # Solve displays a solution if any.
         assignment = routing.SolveWithParameters(search_parameters)
@@ -257,19 +261,22 @@ def main(infile, geo_file, failure_file):
         print('Specify an instance greater than 0.')
 
 
-@app.route('/get', methods=['POST'])
-def create_data_array(geo_file, failure_file):
-    geo_data = str(flask.request.get_json())
-    print(geo_data)
+#@app.route('/get', methods=['POST'])
+def create_data_array(geo_data, geo_file, failure_file):
+    #geo_data = str(flask.request.get_json())
+    #print(geo_data)
     data = parser.AllTrips(geo_data, geo_file, failure_file)
     locations = data.locations
     start_times = data.starttimes
     end_times = data.endtimes
     demands = data.demands
+    print(locations)
+    print([secondsToTime(s) for s in start_times])
+    print([secondsToTime(s) for s in end_times])
 
     data_array = [locations, demands, start_times, end_times]
 
     return data_array
 
-
+main('../Data.csv', 'geocodes.json', 'failures.json')
 
