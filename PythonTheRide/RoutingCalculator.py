@@ -25,6 +25,7 @@ def distance(x1, y1, x2, y2):
     # Great-Circle distance
     return great_circle((x1, y1), (x2, y2)).miles
 
+LOCATIONS = 100
 
 # converts the given time in seconds to a string military time hour, minutes
 def secondsToTime(seconds):
@@ -51,7 +52,7 @@ class CreateDistanceCallback(object):
 
     def __init__(self, locations):
         """Initialize distance array."""
-        num_locations = 1000
+        num_locations = LOCATIONS
         self.matrix = {}
 
         for from_node in range(num_locations):
@@ -124,9 +125,9 @@ def main(infile, geo_file, failure_file):
     demands = data[1]
     start_times = data[2]
     end_times = data[3]
-    num_locations = 1000
+    num_locations = LOCATIONS
     depot = 0
-    num_vehicles = 150
+    num_vehicles = 12
 
     # Create routing model.
     if num_locations > 0:
@@ -266,9 +267,6 @@ def create_data_array(geo_data, geo_file, failure_file):
     start_times = data.starttimes
     end_times = data.endtimes
     demands = data.demands
-    print(locations)
-    print([secondsToTime(s) for s in start_times])
-    print([secondsToTime(s) for s in end_times])
 
     data_array = [locations, demands, start_times, end_times]
 
