@@ -51,7 +51,7 @@ class CreateDistanceCallback(object):
 
     def __init__(self, locations):
         """Initialize distance array."""
-        num_locations = 100
+        num_locations = 1000
         self.matrix = {}
 
         for from_node in range(num_locations):
@@ -124,7 +124,7 @@ def main(infile, geo_file, failure_file):
     demands = data[1]
     start_times = data[2]
     end_times = data[3]
-    num_locations = 100
+    num_locations = 1000
     depot = 0
     num_vehicles = 150
 
@@ -133,14 +133,12 @@ def main(infile, geo_file, failure_file):
 
         routing = pywrapcp.RoutingModel(num_locations, num_vehicles, depot)
         search_parameters = pywrapcp.RoutingModel.DefaultSearchParameters()
-        """
-        for i in range(, num_locations, 2):
-            routing.AddPickupAndDelivery(i - 1, i)
-        """
+        for i in range(0, num_locations, 2):
+            routing.AddPickupAndDelivery(i, i + 1)
         # Setting first solution heuristic: the
         # method for finding a first solution to the problem.
-        #search_parameters.first_solution_strategy = (
-         #   routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+        search_parameters.first_solution_strategy = (
+            routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
         # Callbacks to the distance function and travel time functions here.
         dist_between_locations = CreateDistanceCallback(locations)
         dist_callback = dist_between_locations.Distance
@@ -152,6 +150,7 @@ def main(infile, geo_file, failure_file):
         # ensure that each node pair is a neighbor
         # def AddPickupAndDelivery(self, node1: 'operations_research::RoutingModel::NodeIndex', node2: 'operations_research::RoutingModel::NodeIndex') -> "void":
         """
+
         # Add a dimension for demand.
         slack_max = 0
         vehicle_capacity = 8  # what is the max of the capacity? 8?
@@ -197,9 +196,6 @@ def main(infile, geo_file, failure_file):
             end = end_times[location]
             time_dimension.CumulVar(location).SetRange(start, end)
 
-
-        routing.AddPickupAndDelivery(4, 5)
-        #routing.AddPickupAndDelivery(20, 21)
 
         # Solve displays a solution if any.
         assignment = routing.SolveWithParameters(search_parameters)

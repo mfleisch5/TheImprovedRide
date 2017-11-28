@@ -59,15 +59,18 @@ class Trip:
             self.latestDropoff = time_to_seconds(self.times) + self.time_for_travel() + 900
         else:
             # this means the dropoff time is given. calculate the time it takes to drive, and then 5 minutes early
-            self.earliestPickup = time_to_seconds(str(self.times)) - self.time_for_travel() - 300
+            self.earliestPickup = time_to_seconds(str(self.times)) - self.time_for_travel() - 1200
             # given dropoff time, we calucate when to arrive, and then are 15 minutes late.
-            self.latestPickup = time_to_seconds(str(self.times)) - self.time_for_travel() + 900
+            self.latestPickup = time_to_seconds(str(self.times)) - self.time_for_travel()
             # we are given dropoff time. It's earliest pickup time + travel time
             self.earliestDropoff = time_to_seconds(self.times) - 1200
             self.latestDropoff = time_to_seconds(self.times)
+        if self.earliestPickup > self.earliestDropoff:
+            print(self.time_for_travel(), self.anchor)
 
     def time_for_travel(self):
         return great_circle(self.pickupcoords, self.dropoffcoords).miles * 3600 / 25
+
 
     def valid_trip(self):
         if self.pickupcoords is None or self.dropoffcoords is None:
