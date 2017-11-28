@@ -1,4 +1,4 @@
-import pandas, json, os
+import pandas as pd, json, os
 from geopy.distance import great_circle
 from urllib import request as req
 
@@ -116,7 +116,7 @@ class Trip:
 
 
 class AllTrips:
-    def __init__(self, infile, geo_file, fail_file):
+    def __init__(self, in_json, geo_file, fail_file):
         self.trips = []
         self.geo_file = geo_file
         self.fail_file = fail_file
@@ -130,7 +130,7 @@ class AllTrips:
                 self.fail_set = set(json.load(ff))
         else:
             self.fail_set = set()
-        for i, trip in pandas.read_csv(infile).dropna(subset=['PickHouseNumber', 'DropHouseNumber']).iterrows():
+        for i, trip in pd.read_json(path_or_buf=in_json).dropna(subset=['PickHouseNumber', 'DropHouseNumber']).iterrows():
             geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickHouseNumber'],
                            trip['PickAddress1'], trip['Pickcity'], trip['pickzip'], trip['DropHouseNumber'],
                            trip['DropAddress1'], trip['Dropcity'], trip['DropZip'], self.geo_data, self.fail_set)

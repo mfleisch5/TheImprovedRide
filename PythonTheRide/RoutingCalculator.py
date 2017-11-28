@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import parser
+import flask
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 from geopy.distance import great_circle
 
+app = flask.Flask(__name__)
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
@@ -255,8 +257,9 @@ def main(infile, geo_file, failure_file):
         print('Specify an instance greater than 0.')
 
 
-def create_data_array(infile, geo_file, failure_file):
-    data = parser.AllTrips(infile, geo_file, failure_file)
+@app.route('/get', methods=['POST'])
+def create_data_array(geo_file, failure_file):
+    data = parser.AllTrips(str(flask.request.get_json()), geo_file, failure_file)
     locations = data.locations
     start_times = data.starttimes
     end_times = data.endtimes
@@ -265,3 +268,6 @@ def create_data_array(infile, geo_file, failure_file):
     data_array = [locations, demands, start_times, end_times]
 
     return data_array
+
+
+
