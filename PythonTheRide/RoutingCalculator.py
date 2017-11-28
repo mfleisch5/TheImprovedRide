@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import parser
+import parser, time as t
 # import flask
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
@@ -27,7 +27,7 @@ def distance(x1, y1, x2, y2):
     return great_circle((x1, y1), (x2, y2)).miles
 
 
-LOCATIONS = 200
+LOCATIONS = 150
 
 
 # converts the given time in seconds to a string military time hour, minutes
@@ -82,18 +82,6 @@ class CreateDemandCallback(object):
         return self.matrix[from_node]
 
 
-# Service time (proportional to demand) callback.
-class CreateServiceTimeCallback(object):
-    """Create callback to get time windows at each location."""
-
-    def __init__(self, demands, time_per_demand_unit):
-        self.matrix = demands
-        self.time_per_demand_unit = time_per_demand_unit
-
-    def ServiceTime(self, from_node, to_node):
-        return int(self.matrix[from_node] * self.time_per_demand_unit)
-
-
 # Create the travel time callback (equals distance divided by speed).
 class CreateTravelTimeCallback(object):
     """Create callback to get travel times between locations."""
@@ -105,20 +93,6 @@ class CreateTravelTimeCallback(object):
     def TravelTime(self, from_node, to_node):
         travel_time = self.dist_callback(from_node, to_node) / self.speed
         return int(travel_time)
-
-
-# Create total_time callback (equals service time plus travel time).
-class CreateTotalTimeCallback(object):
-    """Create callback to get total times between locations."""
-
-    def __init__(self, service_time_callback, travel_time_callback):
-        self.service_time_callback = service_time_callback
-        self.travel_time_callback = travel_time_callback
-
-    def TotalTime(self, from_node, to_node):
-        service_time = self.service_time_callback(from_node, to_node)
-        travel_time = self.travel_time_callback(from_node, to_node)
-        return travel_time
 
 
 def main(infile, geo_file, failure_file):
@@ -178,16 +152,10 @@ def main(infile, geo_file, failure_file):
         time = "Time"
         speed = 25
 
-        service_times = CreateServiceTimeCallback(demands, time_per_demand_unit)
-        service_time_callback = service_times.ServiceTime
-
         travel_times = CreateTravelTimeCallback(dist_callback, speed)
         travel_time_callback = travel_times.TravelTime
 
-        total_times = CreateTotalTimeCallback(service_time_callback, travel_time_callback)
-        total_time_callback = total_times.TotalTime
-
-        routing.AddDimension(total_time_callback,  # total time function callback
+        routing.AddDimension(travel_time_callback,  # total time function callback
                              horizon,
                              horizon,
                              fix_start_cumul_to_zero,
@@ -201,7 +169,10 @@ def main(infile, geo_file, failure_file):
             time_dimension.CumulVar(location).SetRange(start, end)
 
         # Solve displays a solution if any.
+
+        print(t.clock())
         assignment = routing.SolveWithParameters(search_parameters)
+        print(t.clock())
         routes = ""
         if assignment:
             # Solution cost.
