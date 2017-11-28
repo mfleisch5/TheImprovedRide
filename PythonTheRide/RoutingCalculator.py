@@ -13,19 +13,22 @@
 # limitations under the License.
 
 import parser
-#import flask
+# import flask
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 from geopy.distance import great_circle
 
-#app = flask.Flask(__name__)
+
+# app = flask.Flask(__name__)
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
     # Great-Circle distance
     return great_circle((x1, y1), (x2, y2)).miles
 
-LOCATIONS = 100
+
+LOCATIONS = 200
+
 
 # converts the given time in seconds to a string military time hour, minutes
 def secondsToTime(seconds):
@@ -34,12 +37,12 @@ def secondsToTime(seconds):
     minutesRounded = minutes % 60
     time = 'AM'
 
-    if (hours >= 12):
+    if hours >= 12:
         time = 'PM'
         hours = hours % 12
-    if (hours == 0):
+    if hours == 0:
         hours = 12
-    if (minutesRounded < 10):
+    if minutesRounded < 10:
         minutesRounded = '0' + str(minutesRounded)
 
     return ('{0}:{1} {2}'.format(hours, minutesRounded, time))
@@ -115,7 +118,7 @@ class CreateTotalTimeCallback(object):
     def TotalTime(self, from_node, to_node):
         service_time = self.service_time_callback(from_node, to_node)
         travel_time = self.travel_time_callback(from_node, to_node)
-        return service_time + travel_time
+        return travel_time
 
 
 def main(infile, geo_file, failure_file):
@@ -127,15 +130,15 @@ def main(infile, geo_file, failure_file):
     end_times = data[3]
     num_locations = LOCATIONS
     depot = 0
-    num_vehicles = 12
+    num_vehicles = 22
 
     # Create routing model.
     if num_locations > 0:
 
         routing = pywrapcp.RoutingModel(num_locations, num_vehicles, depot)
         search_parameters = pywrapcp.RoutingModel.DefaultSearchParameters()
-        for i in range(0, num_locations, 2):
-            routing.AddPickupAndDelivery(i, i + 1)
+        for i in range(2, num_locations, 2):
+            routing.AddPickupAndDelivery(i - 1, i)
         # Setting first solution heuristic: the
         # method for finding a first solution to the problem.
         search_parameters.first_solution_strategy = (
@@ -197,19 +200,18 @@ def main(infile, geo_file, failure_file):
             end = end_times[location]
             time_dimension.CumulVar(location).SetRange(start, end)
 
-
         # Solve displays a solution if any.
         assignment = routing.SolveWithParameters(search_parameters)
         routes = ""
         if assignment:
-            size = len(locations)
             # Solution cost.
-            print("Total distance of all routes: " + str(assignment.ObjectiveValue()) + "\n")
             # Inspect solution.
             capacity_dimension = routing.GetDimensionOrDie(capacity)
             time_dimension = routing.GetDimensionOrDie(time)
 
             for vehicle_nbr in range(num_vehicles):
+                if not routing.IsVehicleUsed(assignment, vehicle_nbr):
+                    continue
                 index = routing.Start(vehicle_nbr)
                 plan_output = 'Route {0}:'.format(vehicle_nbr + 1)
 
@@ -227,7 +229,7 @@ def main(infile, geo_file, failure_file):
                                 tmax=secondsToTime(assignment.Max(time_var)))
                     else:
 
-                        pickup_dropoff1 = str('Dropoff') if node_index % 2 == 1 else str('Pickup')
+                        pickup_dropoff1 = 'Pickup' if node_index % 2 == 1 else 'Dropoff'
 
                         plan_output += \
                             " {pickup_dropoff}, RideID {node_index}, Load({load}) Time({tmin}, {tmax}) -> ".format(  #
@@ -238,16 +240,7 @@ def main(infile, geo_file, failure_file):
                                 tmax=secondsToTime(assignment.Max(time_var)))
 
                     index = assignment.Value(routing.NextVar(index))
-
-                node_index = routing.IndexToNode(index)
-                load_var = capacity_dimension.CumulVar(index)
-                time_var = time_dimension.CumulVar(index)
-                plan_output += \
-                    " Depot"  # RouteID {node_index}  Time({tmin}, {tmax})".format( #Load({load})
-                # node_index=node_index,
-                # load=assignment.Value(load_var),
-                # tmin=secondsToTime(assignment.Min(time_var)),
-                # tmax=secondsToTime(assignment.Max(time_var)))
+                plan_output += " Depot"
                 print(plan_output)
                 routes += plan_output + '\n'
                 print("\n")
@@ -258,10 +251,10 @@ def main(infile, geo_file, failure_file):
         print('Specify an instance greater than 0.')
 
 
-#@app.route('/get', methods=['POST'])
+# @app.route('/get', methods=['POST'])
 def create_data_array(geo_data, geo_file, failure_file):
-    #geo_data = str(flask.request.get_json())
-    #print(geo_data)
+    # geo_data = str(flask.request.get_json())
+    # print(geo_data)
     data = parser.AllTrips(geo_data, geo_file, failure_file)
     locations = data.locations
     start_times = data.starttimes
@@ -272,5 +265,10 @@ def create_data_array(geo_data, geo_file, failure_file):
 
     return data_array
 
-main('../Data.csv', 'geocodes.json', 'failures.json')
 
+class Route:
+    def __init__(self):
+        pass
+
+
+main('../Data.csv', 'geocodes.json', 'failures.json')

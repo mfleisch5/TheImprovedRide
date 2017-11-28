@@ -40,7 +40,7 @@ class Trip:
         self.d_zip = d_zip
         self.geo_lookup(geo_dict, fail_set)
 
-        if self.pickupcoords is not None and self.dropoffcoords is not None:
+        if self.valid_trip():
             self.set_times()
 
     def set_times(self):
@@ -65,12 +65,9 @@ class Trip:
             # we are given dropoff time. It's earliest pickup time + travel time
             self.earliestDropoff = time_to_seconds(self.times) - 1200
             self.latestDropoff = time_to_seconds(self.times)
-        if self.earliestPickup > self.earliestDropoff:
-            print(self.time_for_travel(), self.anchor)
 
     def time_for_travel(self):
         return great_circle(self.pickupcoords, self.dropoffcoords).miles * 3600 / 25
-
 
     def valid_trip(self):
         if self.pickupcoords is None or self.dropoffcoords is None:
@@ -103,10 +100,16 @@ class Trip:
                           "street=" + str(num) + "+" + street.replace(" ", "+") + "&city=" + city + "&zip=" + \
                           str(code) + "&benchmark=9&format=json"
             geo_data = json.load(req.urlopen(address_url))['result']
-        except Exception as e:
-            print(e, addr)
-            failure_set.add(addr)
-            return None
+        except Exception:
+            try:
+                address_url = "https://geocoding.geo.census.gov/geocoder/locations/address?" + \
+                          "street=" + str(num) + "+" + street.replace(" ", "+") + "&city=" + city + "&zip=" + \
+                          str(code) + "&benchmark=9&format=json"
+                geo_data = json.load(req.urlopen(address_url))['result']
+            except Exception as e:
+                print(e, addr)
+                failure_set.add(addr)
+                return None
         if len(geo_data['addressMatches']) == 0:
             print(addr, ': Failure')
             failure_set.add(addr)
@@ -143,10 +146,12 @@ class AllTrips:
             json.dump(self.geo_data, gf, indent=4)
         with open(self.fail_file, 'w') as ff:
             json.dump(list(self.fail_set), ff)
-        self.locations = [pickup for trip in self.trips for pickup in [trip.pickupcoords, trip.dropoffcoords]]
-        self.starttimes = [int(time) for trip in self.trips for time in [trip.earliestPickup, trip.earliestDropoff]]
-        self.endtimes = [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]
-        self.demands = [demand for _ in self.trips for demand in [1, -1]]
+        self.locations = [[42, -71]] + [pickup for trip in self.trips for
+                                        pickup in [trip.pickupcoords, trip.dropoffcoords]]
+        self.starttimes = [0] + [int(time) for trip in self.trips for time
+                                 in [trip.earliestPickup, trip.earliestDropoff]]
+        self.endtimes = [0] + [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]
+        self.demands = [0] + [demand for trip in self.trips for demand in [trip.passengers, -trip.passengers]]
 
     def testIt(self):
         for i in range(0, len(self.locations)):
