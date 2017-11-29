@@ -13,13 +13,10 @@
 # limitations under the License.
 
 import parser
-import flask
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 from geopy.distance import great_circle
 
-
-app = flask.Flask(__name__)
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
@@ -144,7 +141,6 @@ def main(in_dict, geo_file, failure_file):
         routing.AddDimension(demands_callback, NullCapacitySlack, VehicleCapacity,
                              fix_start_cumul_to_zero, capacity)
         # Add time dimension.
-        time_per_demand_unit = 1
         horizon = 24 * 3600
         time = "Time"
         speed = 25
@@ -202,11 +198,6 @@ def main(in_dict, geo_file, failure_file):
         print('Specify an instance greater than 0.')
 
 
-@app.route('/post', methods=['POST'])
-def get_json():
-    in_dict = flask.request.json['trips']
-    return main(in_dict, 'geocodes.json', 'failures.json')
-
 class Stop:
     def __init__(self, id, addr, pickup, time_window, curr_load):
         self.id = id
@@ -253,7 +244,3 @@ class RoutingCalculator:
 
     def valid(self):
         return all(route.valid() for route in self.routes)
-
-
-app.debug = True
-app.run(host='0.0.0.0', port=5000)
