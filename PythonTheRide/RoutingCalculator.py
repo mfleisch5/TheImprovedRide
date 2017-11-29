@@ -58,14 +58,14 @@ def secondsToTime(seconds):
 class CreateDistanceCallback(object):
     """Create callback to calculate distances and travel times between points."""
 
-    def __init__(self, locations):
+    def __init__(self, locations, num):
         """Initialize distance array."""
-        num_locations = LOCATIONS
+        self.num = num
         self.matrix = {}
 
-        for from_node in range(num_locations):
+        for from_node in range(num):
             self.matrix[from_node] = {}
-            for to_node in range(num_locations):
+            for to_node in range(num):
                 x1 = locations[from_node][0]
                 y1 = locations[from_node][1]
                 x2 = locations[to_node][0]
@@ -100,7 +100,7 @@ class CreateTravelTimeCallback(object):
         return int(travel_time)
 
 
-def main(in_dict, geo_file, failure_file):
+def main(in_dict, geo_file, failure_file, num_locations):
     # Create the data.
     trip_data = parser.AllTrips(in_dict, geo_file, failure_file)
     print("Running...\n")
@@ -109,7 +109,6 @@ def main(in_dict, geo_file, failure_file):
     demands = data[1]
     start_times = data[2]
     end_times = data[3]
-    num_locations = LOCATIONS
     depot = 0
     num_vehicles = 22
 
@@ -125,7 +124,7 @@ def main(in_dict, geo_file, failure_file):
         search_parameters.first_solution_strategy = (
             routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
         # Callbacks to the distance function and travel time functions here.
-        dist_between_locations = CreateDistanceCallback(locations)
+        dist_between_locations = CreateDistanceCallback(locations, num_locations)
         dist_callback = dist_between_locations.Distance
 
         routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
