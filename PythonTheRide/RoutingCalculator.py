@@ -20,6 +20,14 @@ from geopy.distance import great_circle
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
+    """
+
+    :param x1:
+    :param y1:
+    :param x2:
+    :param y2:
+    :return:
+    """
     # Great-Circle distance
     return great_circle((x1, y1), (x2, y2)).miles
 
@@ -189,7 +197,7 @@ def main(in_dict, geo_file, failure_file):
                 routes.add_route(route)
             if routes.valid():
                 print(routes)
-                return str(routes)
+                return routes
             else:
                 print("Invalid Routes")
         else:
@@ -214,10 +222,11 @@ class Stop:
             tmin=secondsToTime(self.time_window[0]),
             tmax=secondsToTime(self.time_window[1]))
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 class Route:
     def __init__(self):
-        self.depot = None
         self.stops = []
 
     def add_stop(self, stop):
@@ -230,6 +239,9 @@ class Route:
         pickups = [stop.id for stop in self.stops if stop.pickup]
         dropoffs = {stop.id for stop in self.stops if not stop.pickup}
         return {p + 1 for p in pickups} == dropoffs
+
+    def __eq__(self, other):
+        return self.stops == other.stops
 
 
 class RoutingCalculator:
@@ -244,3 +256,6 @@ class RoutingCalculator:
 
     def valid(self):
         return all(route.valid() for route in self.routes)
+
+    def __eq__(self, other):
+        return self.routes == other.routes
