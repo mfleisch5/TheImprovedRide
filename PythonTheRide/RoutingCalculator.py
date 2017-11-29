@@ -239,6 +239,7 @@ class Stop:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+
 class Route:
     def __init__(self):
         self.stops = []
