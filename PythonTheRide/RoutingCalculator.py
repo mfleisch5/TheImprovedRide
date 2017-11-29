@@ -95,9 +95,10 @@ class CreateTravelTimeCallback(object):
         return int(travel_time)
 
 
-def main(infile, geo_file, failure_file):
+def main(in_dict, geo_file, failure_file):
     # Create the data.
-    trip_data = parser.AllTrips(infile, geo_file, failure_file)
+    trip_data = parser.AllTrips(in_dict, geo_file, failure_file)
+    print("Running...\n")
     data = [trip_data.locations, trip_data.demands, trip_data.starttimes, trip_data.endtimes]
     locations = data[0]
     demands = data[1]
@@ -192,7 +193,7 @@ def main(infile, geo_file, failure_file):
                 routes.add_route(route)
             if routes.valid():
                 print(routes)
-                return routes
+                return str(routes)
             else:
                 print("Invalid Routes")
         else:
@@ -201,11 +202,10 @@ def main(infile, geo_file, failure_file):
         print('Specify an instance greater than 0.')
 
 
-@app.route('/get', methods=['POST'])
+@app.route('/post', methods=['POST'])
 def get_json():
-    s = flask.request.get_json()
-    print(s)
-    return s
+    in_dict = flask.request.json['trips']
+    return main(in_dict, 'geocodes.json', 'failures.json')
 
 class Stop:
     def __init__(self, id, addr, pickup, time_window, curr_load):
@@ -254,8 +254,6 @@ class RoutingCalculator:
     def valid(self):
         return all(route.valid() for route in self.routes)
 
-
-#main('../Data.csv', 'geocodes.json', 'failures.json')
 
 app.debug = True
 app.run(host='0.0.0.0', port=5000)

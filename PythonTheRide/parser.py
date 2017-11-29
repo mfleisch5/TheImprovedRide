@@ -122,7 +122,7 @@ class Trip:
 
 
 class AllTrips:
-    def __init__(self, in_json, geo_file, fail_file):
+    def __init__(self, in_dict, geo_file, fail_file):
         self.trips = []
         self.geo_file = geo_file
         self.fail_file = fail_file
@@ -136,7 +136,8 @@ class AllTrips:
                 self.fail_set = set(json.load(ff))
         else:
             self.fail_set = set()
-        for i, trip in pd.read_csv(in_json).dropna(subset=['PickHouseNumber', 'DropHouseNumber']).iterrows():
+        for i, trip in pd.DataFrame(in_dict, columns=in_dict[0].keys()).\
+                dropna(subset=['PickHouseNumber', 'DropHouseNumber']).iterrows():
             geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickHouseNumber'],
                            trip['PickAddress1'], trip['Pickcity'], trip['pickzip'], trip['DropHouseNumber'],
                            trip['DropAddress1'], trip['Dropcity'], trip['DropZip'], self.geo_data, self.fail_set)
