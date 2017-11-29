@@ -21,12 +21,13 @@ def time_to_seconds(time):
 
 
 class Trip:
-    """
-    Create callback to calculate distances and travel times between points.
-    """
-
     def __init__(self, anchor, times, passengers, p_num, p_street, p_city, p_zip, d_num, d_street, d_city,
                  d_zip, geo_dict, fail_set):
+        """
+        Creates a Trip object with all given attributes including pickup and dropoff addresses, anchors, times, etc
+        :param geo_dict: A dictionary that contains all known geolocations for all known addresses
+        :param fail_set: A set of all known addresses that cannot be geolocated
+        """
         self.anchor = anchor
         self.times = times
         self.passengers = passengers
@@ -48,7 +49,7 @@ class Trip:
     def set_times(self):
         """
         Sets the earliest and latest pickup and drop off times as long as coordinates are valid
-        :return:
+
         """
         if self.anchor == "P":
             # specified pickup time, 5 minutes early.
@@ -69,15 +70,31 @@ class Trip:
             self.latestDropoff = time_to_seconds(self.times)
 
     def time_for_travel(self):
+        """
+        Finds out the time for travel between the pickup and dropoff coordinates given 25 mph speed
+
+        """
         return great_circle(self.pickupcoords, self.dropoffcoords).miles * 3600 / 25
 
     def valid_trip(self):
+        """
+        Returns True if both pickupcoords and dropoffcoords are not None and within the bounds of the greater Boston
+        area
+
+        """
         if self.pickupcoords is None or self.dropoffcoords is None:
             return False
         valid = lambda x, y: 41 < x < 43.5 and -72.5 < y < - 70.5
         return valid(self.pickupcoords[0], self.pickupcoords[1]) and valid(self.dropoffcoords[0], self.dropoffcoords[1])
 
     def geo_lookup(self, geo_dict, fail_set):
+        """
+        Looks up the pickup and dropoff addresses in the geo_dict and fail_set, and tries to geolocate them if they
+        cannot be looked up.
+        :param geo_dict: All known mappings of geolocations and addresses
+        :param fail_set: All known failed addresses
+
+        """
         if self.full_pick in geo_dict:
             self.pickupcoords = tuple(float(geo) for geo in geo_dict[self.full_pick].split(','))
         elif self.full_pick in fail_set:
@@ -95,6 +112,10 @@ class Trip:
 
     @staticmethod
     def lookup(addr, num, street, city, code, geo_dict, failure_set):
+        """
+        Uses geocoding.geo.census.gov to try and find the coordinates of a given address
+        :return: The coordinates if able to be found, and None if they cannot be
+        """
         try:
             address_url = "https://geocoding.geo.census.gov/geocoder/locations/address?" + \
                           "street=" + str(num) + "+" + street.replace(" ", "+") + "&city=" + city + "&zip=" + \
@@ -123,6 +144,14 @@ class Trip:
 
 class AllTrips:
     def __init__(self, in_dict, geo_file, fail_file):
+        """
+        Readies input into a format able to be parsed by RoutingCalculator.py
+        :param in_dict: A list of dictionaries in record format that contains all inputs to be parsed
+        :param geo_file: The path to a JSON file containing all known mappings of addresses to coordinates
+         (can be a file that does not exist yet)
+        :param fail_file: The path to a JSON file containing a list of all known addresses that could not be geocoded
+         (can be a file that does not exist yet)
+        """
         self.trips = []
         self.geo_file = geo_file
         self.fail_file = fail_file
@@ -155,7 +184,3 @@ class AllTrips:
         self.endtimes = [0] + [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]
         self.demands = [0] + [demand for trip in self.trips for demand in [trip.passengers, -trip.passengers]]
 
-    def testIt(self):
-        for i in range(0, len(self.locations)):
-            pass
-        print(len(self.locations), len(self.starttimes), len(self.endtimes), sep='\n')
