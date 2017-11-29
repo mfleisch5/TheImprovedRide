@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import parser
-# import flask
+import flask
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 from geopy.distance import great_circle
 
 
-# app = flask.Flask(__name__)
+app = flask.Flask(__name__)
 
 # we could change this to use the google api
 def distance(x1, y1, x2, y2):
@@ -201,6 +201,10 @@ def main(infile, geo_file, failure_file):
         print('Specify an instance greater than 0.')
 
 
+@app.route('/get', methods=['GET'])
+def get_json():
+    return flask.request.data
+
 class Stop:
     def __init__(self, id, addr, pickup, time_window, curr_load):
         self.id = id
@@ -249,4 +253,7 @@ class RoutingCalculator:
         return all(route.valid() for route in self.routes)
 
 
-main('../Data.csv', 'geocodes.json', 'failures.json')
+#main('../Data.csv', 'geocodes.json', 'failures.json')
+
+app.debug = True
+app.run(host='0.0.0.0', port=5000)
