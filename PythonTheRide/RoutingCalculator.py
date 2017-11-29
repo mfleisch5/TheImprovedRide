@@ -201,9 +201,11 @@ def main(infile, geo_file, failure_file):
         print('Specify an instance greater than 0.')
 
 
-@app.route('/get', methods=['GET'])
+@app.route('/get', methods=['POST'])
 def get_json():
-    return flask.request.data
+    s = flask.request.get_json()
+    print(s)
+    return s
 
 class Stop:
     def __init__(self, id, addr, pickup, time_window, curr_load):
