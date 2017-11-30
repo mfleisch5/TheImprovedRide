@@ -183,4 +183,5 @@ class AllTrips:
                                  in [trip.earliestPickup, trip.earliestDropoff]]
         self.endtimes = [0] + [int(time) for trip in self.trips for time in [trip.latestPickup, trip.latestDropoff]]
         self.demands = [0] + [demand for trip in self.trips for demand in [trip.passengers, -trip.passengers]]
+        print(self.locations)
 

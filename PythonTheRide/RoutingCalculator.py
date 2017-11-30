@@ -278,7 +278,6 @@ class Route:
         return self.stops == other.stops
 
 
-
 class RoutingCalculator:
     def __init__(self):
         self.routes = []
