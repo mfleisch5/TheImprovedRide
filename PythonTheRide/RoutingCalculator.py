@@ -98,13 +98,13 @@ class CreateTravelTimeCallback(object):
         return int(travel_time)
 
 
-def main(in_dict, geo_file, failure_file, num_locations):
+def main(in_dict, geo_file, failure_file, num_trips):
     """
     The main Routing Calculator function, which calculates the routes given correct input
     :param in_dict: A record-like list of dictionaries which indicates all Trip objects that will be parsed
     :param geo_file: The path to a JSON file which maps all known addresses to geocodes
     :param failure_file: The path to a JSON file which lists all addresses that can't be geocoded
-    :param num_locations: The number of locations to be included in the calculator
+    :param num_trips: The number of trips to be included in the calculator
     :return: A RoutingCalculator object that contains all Routes and Stop values
     """
     # Create the data.
@@ -115,7 +115,7 @@ def main(in_dict, geo_file, failure_file, num_locations):
     demands = data[1]
     start_times = data[2]
     end_times = data[3]
-    num_locations = min(num_locations, len(locations))
+    num_locations = min(num_trips * 2, len(locations)) + 1
     depot = 0
     num_vehicles = max(10, int(num_locations * 0.15))
 
@@ -242,6 +242,13 @@ class Stop:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def to_dict(self):
+        return {"Address": self.addr,
+                "Type": "Pickup" if self.pickup else "Dropoff",
+                "Load": self.curr_load,
+                "Earliest": self.time_window[0],
+                "Latest": self.time_window[1]}
+
 
 class Route:
     def __init__(self):
@@ -271,6 +278,7 @@ class Route:
         return self.stops == other.stops
 
 
+
 class RoutingCalculator:
     def __init__(self):
         self.routes = []
@@ -295,3 +303,6 @@ class RoutingCalculator:
 
     def __eq__(self, other):
         return self.routes == other.routes
+
+    def to_json_format(self):
+        return [[stop.to_dict() for stop in route] for route in self.routes]
