@@ -10,8 +10,8 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'echo Test'
-                sh 'python -m unittest -v PythonTheRide/testsParser.py'
-		sh 'python -m unittest -v PythonTheRide/testsRoutingCalculator.py'
+                sh 'python3 -m unittest -v PythonTheRide/testsParser.py'
+		sh 'python3 -m unittest -v PythonTheRide/testsRoutingCalculator.py'
             }
         }
     }
