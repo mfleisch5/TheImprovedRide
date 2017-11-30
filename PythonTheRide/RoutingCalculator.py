@@ -94,7 +94,7 @@ class CreateTravelTimeCallback(object):
         self.speed = speed
 
     def TravelTime(self, from_node, to_node):
-        travel_time = self.dist_callback(from_node, to_node) / self.speed
+        travel_time = self.dist_callback(from_node, to_node) * 3600 / self.speed
         return int(travel_time)
 
 
