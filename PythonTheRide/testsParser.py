@@ -139,7 +139,8 @@ class Geo_Lookup(unittest.TestCase):
                             "BROOKLINE", "2445", {"149 SUTHERLAND RD BRIGHTON 2135": "42.34075,-71.1474"},
                             {'13 Pierce St BROOKLINE 2445', '63 EVERETT ST ALLSTON 2134'})
         self.assertEqual((42.34075, -71.1474), trip1.pickupcoords)
-        # self.assertEqual((42.34075,-71.1474), trip1.geo_lookup({"149 SUTHERLAND RD BRIGHTON 2135": "42.34075,-71.1474"},
+        # self.assertEqual((42.34075,-71.1474), trip1.geo_lookup({"149 SUTHERLAND RD BRIGHTON 2135":
+        # "42.34075,-71.1474"},
         #                    {'13 Pierce St BROOKLINE 2445', '63 EVERETT ST ALLSTON 2134'}))
 
     # test that when the dropoff address is in the fail set, the dropoff coords of the trip are "None"
@@ -157,7 +158,8 @@ class Geo_Lookup(unittest.TestCase):
                             "BRIGHTON", "2135", {"149 SUTHERLAND RD BRIGHTON 2135": "42.34075,-71.1474"},
                             {"13 Pierce St BROOKLINE 2445"})
         self.assertEqual((42.34075, -71.1474), trip1.dropoffcoords)
-        # self.assertEqual((42.34075,-71.1474), trip1.geo_lookup({"149 SUTHERLAND RD BRIGHTON 2135": "42.34075,-71.1474"},
+        # self.assertEqual((42.34075,-71.1474), trip1.geo_lookup({"149 SUTHERLAND RD BRIGHTON 2135":
+        # "42.34075,-71.1474"},
         #                     {"13 Pierce St BROOKLINE 2445"}))
 
 
