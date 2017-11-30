@@ -10,10 +10,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'echo Test'
-		sh 'python3 -m pip install py3-ortools'
-		sh 'python3 -m pip install pandas'
-		sh 'python3 -m pip install geopy'
-		sh 'python3 -m pip install flask'
+		sh 'pip install -r PythonTheRide/requirements.txt'
                 sh 'python3 -m unittest -v PythonTheRide/testsParser.py'
 		sh 'python3 -m unittest -v PythonTheRide/testsRoutingCalculator.py'
             }
