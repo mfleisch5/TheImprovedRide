@@ -165,7 +165,7 @@ class AllTrips:
                 self.fail_set = set(json.load(ff))
         else:
             self.fail_set = set()
-        for i, trip in pd.DataFrame(in_dict, columns=in_dict[0].keys()).\
+        for i, trip in pd.DataFrame(in_dict).\
                 dropna(subset=['PickHouseNumber', 'DropHouseNumber']).iterrows():
             geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickHouseNumber'],
                            trip['PickAddress1'], trip['Pickcity'], trip['pickzip'], trip['DropHouseNumber'],

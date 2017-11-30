@@ -206,10 +206,13 @@ def main(in_dict, geo_file, failure_file, num_locations):
                 return routes
             else:
                 print("Invalid Routes")
+                raise Exception("Invalid Routes")
         else:
             print('No solution found.')
+            raise Exception("No solution could be found")
     else:
         print('Specify an instance greater than 0.')
+        raise Exception("Specify an instance greater than 0.")
 
 
 class Stop:
