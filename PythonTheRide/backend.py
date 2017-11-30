@@ -7,6 +7,9 @@ app = Flask(__name__)
 @app.route('/post', methods=['POST'])
 def get_data():
     in_records = request.json['trips']
+    j_format = json.dumps(RoutingCalculator.main(in_records, 'geocodes.json', 'failures.json', 3).to_json_format())
+    print("--------")
+    print(j_format)
     return json.dumps(RoutingCalculator.main(in_records, 'geocodes.json', 'failures.json', 3).to_json_format())
 
 app.debug = True

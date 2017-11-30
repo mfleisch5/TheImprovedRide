@@ -115,7 +115,7 @@ def main(in_dict, geo_file, failure_file, num_trips):
     demands = data[1]
     start_times = data[2]
     end_times = data[3]
-    num_locations = min(num_trips * 2, len(locations)) + 1
+    num_locations = min(num_trips * 2 + 1, len(locations))
     depot = 0
     num_vehicles = max(10, int(num_locations * 0.15))
 
@@ -304,4 +304,4 @@ class RoutingCalculator:
         return self.routes == other.routes
 
     def to_json_format(self):
-        return [[stop.to_dict() for stop in route] for route in self.routes]
+        return [[stop.to_dict() for stop in route.stops] for route in self.routes]
