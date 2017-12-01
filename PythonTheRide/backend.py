@@ -1,9 +1,11 @@
 from flask import Flask, request
 import RoutingCalculator, json, os
+from flask_cors import CORS
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/post', methods=['POST'])
