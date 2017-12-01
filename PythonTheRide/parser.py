@@ -126,7 +126,7 @@ class Trip:
                 address_url = "https://geocoding.geo.census.gov/geocoder/locations/address?" + \
                           "street=" + str(num) + "+" + street.replace(" ", "+") + "&city=" + city + "&zip=" + \
                           str(code) + "&benchmark=9&format=json"
-                geo_data = json.load(req.urlopen(address_url))['result']
+                geo_data = json.loads(req.urlopen(address_url).read().decode('utf-8'))['result']
             except Exception as e:
                 print(e, addr)
                 failure_set.add(addr)
