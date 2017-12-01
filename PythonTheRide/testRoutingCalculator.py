@@ -1,9 +1,11 @@
-import unittest
-import RoutingCalculator
-from RoutingCalculator import Stop
-import parser
-from parser import time_to_seconds
+import unittest, os
+from . import RoutingCalculator
+from . import parser
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+geo_path = os.path.join(dir_path, 'geocodes.json')
+fail_path = os.path.join(dir_path, 'failures.json')
 
 class TestRouteCalculator(unittest.TestCase):
     def test_outstr(self):
@@ -19,7 +21,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "Dropcity": "BROOKLINE",
                   "DropZip": 2446,
                   }]
-        routes = RoutingCalculator.main(input, 'geocodes.json', 'failures.json', 3)
+        routes = RoutingCalculator.main(input, geo_path, fail_path, 3)
         self.assertEqual(str(routes), "Route 1: Depot -> ->  Pickup at 43 Brattle St CAMBRIDGE 2138, Load(0) " +
                          "Time(2:34 PM, 2:54 PM) ->  Dropoff at 1184 BEACON ST BROOK" +
                          "LINE 2446, Load(2) Time(2:40 PM, 3:00 PM) -> Depot")
@@ -76,7 +78,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "DropZip": 2143,
                   }]
 
-        routes = RoutingCalculator.main(input, 'geocodes.json', 'failures.json', 9)
+        routes = RoutingCalculator.main(input, geo_path, fail_path, 9)
         i = str(routes)
         self.maxDiff = None
 
@@ -117,7 +119,7 @@ class TestRouteCalculator(unittest.TestCase):
                  ]
 
         self.maxDiff = None
-        routes = RoutingCalculator.main(input, 'geocodes.json', 'failures.json', 5)
+        routes = RoutingCalculator.main(input, geo_path, fail_path, 5)
         self.assertEqual(str(routes), "Route 1: Depot -> ->  Pickup at 388 MAIN ST CHARLESTOWN 2129, Load(0) "
                                       "Time(2:36 PM, 2:56 PM) ->  Pickup at 24 DEVENS ST CHARLESTOWN 2129, "
                                       "Load(2) Time(2:37 PM, 2:57 PM) ->  Dropoff at 75 LIVERPOOL St EAST BOSTON 2128, "
@@ -150,7 +152,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "DropAddress1": "City Sq",
                   "Dropcity": "CHARLESTOWN",
                   "DropZip": 2129}]
-        routes = RoutingCalculator.main(input, 'geocodes.json', 'failures.json', 5)
+        routes = RoutingCalculator.main(input, geo_path, fail_path, 5)
         i = str(routes)
         self.maxDiff = None
 
@@ -174,7 +176,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "Dropcity": "BROOKLINE",
                   "DropZip": 2446,
                   }]
-        self.assertRaises(Exception, RoutingCalculator.main(input, 'geocodes.json', 'failures.json', 1))
+        self.assertRaises(Exception, RoutingCalculator.main(input, geo_path, fail_path, 1))
 
 
 # Tests for the Route class in the RoutingCalculator class
@@ -304,29 +306,29 @@ class TestStopClass(unittest.TestCase):
         id = 1
         addr = "95 TREMONT ST, BOSTON, 2108"
         pickup = True
-        time_window = (time_to_seconds("3:00 PM"), time_to_seconds("3:15 PM"))
+        time_window = (parser.time_to_seconds("3:00 PM"), parser.time_to_seconds("3:15 PM"))
         curr_load = 0
 
-        stopa = Stop(id, addr, pickup, time_window, curr_load)
+        stopa = RoutingCalculator.Stop(id, addr, pickup, time_window, curr_load)
 
         self.assertEquals(1, stopa.id)
         self.assertEquals("95 TREMONT ST, BOSTON, 2108", stopa.addr)
         self.assertEquals(True, stopa.pickup)
-        self.assertEqual((time_to_seconds("3:00 PM"), time_to_seconds("3:15 PM")), stopa.time_window)
+        self.assertEqual((parser.time_to_seconds("3:00 PM"), parser.time_to_seconds("3:15 PM")), stopa.time_window)
         self.assertEqual(0, stopa.curr_load)
 
         id2 = 2
         addr2 = "95 TREMONT ST, BOSTON, 2108"
         pickup2 = False
-        time_window2 = (time_to_seconds("3:00 PM"), time_to_seconds("3:15 PM"))
+        time_window2 = (parser.time_to_seconds("3:00 PM"), parser.time_to_seconds("3:15 PM"))
         curr_load2 = 0
 
-        stopb = Stop(id2, addr2, pickup2, time_window2, curr_load2)
+        stopb = RoutingCalculator.Stop(id2, addr2, pickup2, time_window2, curr_load2)
 
         self.assertEquals(2, stopb.id)
         self.assertEquals("95 TREMONT ST, BOSTON, 2108", stopb.addr)
         self.assertEquals(False, stopb.pickup)
-        self.assertEqual((time_to_seconds("3:00 PM"), time_to_seconds("3:15 PM")), stopb.time_window)
+        self.assertEqual((parser.time_to_seconds("3:00 PM"), parser.time_to_seconds("3:15 PM")), stopb.time_window)
         self.assertEqual(0, stopb.curr_load)
 
     # To test that a stop object is converted to string correctly
@@ -334,19 +336,19 @@ class TestStopClass(unittest.TestCase):
         id = 1
         addr = "95 TREMONT ST, BOSTON, 2108"
         pickup = True
-        time_window = (time_to_seconds("3:00 PM"), time_to_seconds("3:15 PM"))
+        time_window = (parser.time_to_seconds("3:00 PM"), parser.time_to_seconds("3:15 PM"))
         curr_load = 0
 
-        stopa = Stop(id, addr, pickup, time_window, curr_load)
+        stopa = RoutingCalculator.Stop(id, addr, pickup, time_window, curr_load)
         self.assertEquals(" Pickup at 95 TREMONT ST, BOSTON, 2108, Load(0) Time(3:00 PM, 3:15 PM)", str(stopa))
 
         id = 2
         addr = "95 TREMONT ST, BOSTON, 2108"
         pickup = False
-        time_window = (time_to_seconds("3:00 PM"), time_to_seconds("3:15 PM"))
+        time_window = (parser.time_to_seconds("3:00 PM"), parser.time_to_seconds("3:15 PM"))
         curr_load = 0
 
-        stopb = Stop(id, addr, pickup, time_window, curr_load)
+        stopb = RoutingCalculator.Stop(id, addr, pickup, time_window, curr_load)
         self.assertEquals(" Dropoff at 95 TREMONT ST, BOSTON, 2108, Load(0) Time(3:00 PM, 3:15 PM)", str(stopb))
 
     # To verify the equals method for a stop object
@@ -354,13 +356,13 @@ class TestStopClass(unittest.TestCase):
         id = 1
         addr = "95 TREMONT ST, BOSTON, 2108"
         pickup = True
-        time_window = (time_to_seconds("3:00 PM"), time_to_seconds("3:15 PM"))
+        time_window = (parser.time_to_seconds("3:00 PM"), parser.time_to_seconds("3:15 PM"))
         curr_load = 0
 
-        stopa = Stop(id, addr, pickup, time_window, curr_load)
+        stopa = RoutingCalculator.Stop(id, addr, pickup, time_window, curr_load)
         self.assertEquals(" Pickup at 95 TREMONT ST, BOSTON, 2108, Load(0) Time(3:00 PM, 3:15 PM)", str(stopa))
 
-        stopb = Stop(id, addr, pickup, time_window, curr_load)
+        stopb = RoutingCalculator.Stop(id, addr, pickup, time_window, curr_load)
 
         self.assertEqual(stopa, stopb)
         self.assertEqual(stopa, stopa)

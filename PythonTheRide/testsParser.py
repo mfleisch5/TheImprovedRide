@@ -1,10 +1,13 @@
-import unittest
+import unittest, os
 
-from ortools.constraint_solver import pywrapcp
-from RoutingCalculator import secondsToTime, distance
-import parser
-from parser import Trip, AllTrips, time_to_seconds
 
+from . import RoutingCalculator
+from . import parser
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+geo_path = os.path.join(dir_path, 'geocodes.json')
+fail_path = os.path.join(dir_path, 'failures.json')
 
 class GreatCircleDistance(unittest.TestCase):
     def test_GCD(self):
@@ -61,10 +64,10 @@ class Time_Windows(unittest.TestCase):
         tripa = parser.Trip("P", "1:00 PM", "1", "50", "ARSENAL ST", "WATERTOWN", "2472",
                             "468", "ARSENAL ST", "WATERTOWN", "2472", geocodes, failure)
 
-        self.assertEqual(tripa.earliestDropoff, time_to_seconds("1:00 PM") - 300 + tripa.time_for_travel())
-        self.assertEqual(tripa.earliestPickup, time_to_seconds("1:00 PM") - 300)
-        self.assertEqual(tripa.latestDropoff, time_to_seconds("1:00 PM") + 900 + tripa.time_for_travel())
-        self.assertEqual(tripa.latestPickup, time_to_seconds("1:00 PM") + 900)
+        self.assertEqual(tripa.earliestDropoff, parser.time_to_seconds("1:00 PM") - 300 + tripa.time_for_travel())
+        self.assertEqual(tripa.earliestPickup, parser.time_to_seconds("1:00 PM") - 300)
+        self.assertEqual(tripa.latestDropoff, parser.time_to_seconds("1:00 PM") + 900 + tripa.time_for_travel())
+        self.assertEqual(tripa.latestPickup, parser.time_to_seconds("1:00 PM") + 900)
 
         self.assertEqual(tripa.earliestDropoff, 46654.956821359854)
         self.assertEqual(tripa.earliestPickup, 46500)
@@ -74,10 +77,10 @@ class Time_Windows(unittest.TestCase):
         tripb = parser.Trip("A", "2:00 PM", "1", "50", "ARSENAL ST", "WATERTOWN", "2472",
                             "468", "ARSENAL ST", "WATERTOWN", "2472", geocodes, failure)
 
-        self.assertEqual(tripb.earliestDropoff, time_to_seconds("2:00 PM") - 1200)
-        self.assertEqual(tripb.earliestPickup, time_to_seconds("2:00 PM") - tripb.time_for_travel() - 1200)
-        self.assertEqual(tripb.latestDropoff, time_to_seconds("2:00 PM"))
-        self.assertEqual(tripb.latestPickup, time_to_seconds("2:00 PM") - tripb.time_for_travel())
+        self.assertEqual(tripb.earliestDropoff, parser.time_to_seconds("2:00 PM") - 1200)
+        self.assertEqual(tripb.earliestPickup, parser.time_to_seconds("2:00 PM") - tripb.time_for_travel() - 1200)
+        self.assertEqual(tripb.latestDropoff, parser.time_to_seconds("2:00 PM"))
+        self.assertEqual(tripb.latestPickup, parser.time_to_seconds("2:00 PM") - tripb.time_for_travel())
 
         self.assertEqual(tripb.earliestDropoff, 49200)
         self.assertEqual(tripb.earliestPickup, 49045.043178640146)
@@ -114,7 +117,7 @@ class All_Trips(unittest.TestCase):
     # test that the lengths of the locations, start times, and end times are all equal
     @unittest.skip("parser was updated, this test needs to be updated")
     def test_lengths(self):
-        trips1 = AllTrips('../Data.csv', 'geocodes.json', 'failures.json')
+        trips1 = parser.AllTrips('../Data.csv', geo_path, fail_path)
         for i in range(0, len(trips1.locations)):
             pass
         self.assertEqual(len(trips1.starttimes), len(trips1.endtimes))
@@ -187,15 +190,15 @@ class TimeAndSecondsConverter(unittest.TestCase):
         time8 = "12:08 AM"
         time9 = "12:00 PM"
 
-        self.assertEqual(time_to_seconds(time1), 55800)
-        self.assertEqual(time_to_seconds(time2), 1080)
-        self.assertEqual(time_to_seconds(time3), 0)
-        self.assertEqual(time_to_seconds(time5), 43140)
-        self.assertEqual(time_to_seconds(time7), 43740)
-        self.assertEqual(time_to_seconds(time8), 480)
-        self.assertEqual(time_to_seconds(time6), 86340)
-        self.assertEqual(time_to_seconds(time4), 60)
-        self.assertEqual(time_to_seconds(time9), 43200)
+        self.assertEqual(parser.time_to_seconds(time1), 55800)
+        self.assertEqual(parser.time_to_seconds(time2), 1080)
+        self.assertEqual(parser.time_to_seconds(time3), 0)
+        self.assertEqual(parser.time_to_seconds(time5), 43140)
+        self.assertEqual(parser.time_to_seconds(time7), 43740)
+        self.assertEqual(parser.time_to_seconds(time8), 480)
+        self.assertEqual(parser.time_to_seconds(time6), 86340)
+        self.assertEqual(parser.time_to_seconds(time4), 60)
+        self.assertEqual(parser.time_to_seconds(time9), 43200)
 
     # To test that times from seconds get correctly converted into readable AM/PM time.
     def test_seconds_to_time_converter(self):
@@ -209,12 +212,12 @@ class TimeAndSecondsConverter(unittest.TestCase):
         time8 = 86340
         time9 = 43200
 
-        self.assertEqual(secondsToTime(time2), '3:30 PM')
-        self.assertEqual(secondsToTime(time1), '12:18 AM')
-        self.assertEqual(secondsToTime(time3), '12:00 AM')
-        self.assertEqual(secondsToTime(time5), '12:01 AM')
-        self.assertEqual(secondsToTime(time7), '11:59 AM')
-        self.assertEqual(secondsToTime(time8), '11:59 PM')
-        self.assertEqual(secondsToTime(time6), '12:09 AM')
-        self.assertEqual(secondsToTime(time4), '12:08 AM')
-        self.assertEqual(secondsToTime(time9), '12:00 PM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time2), '3:30 PM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time1), '12:18 AM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time3), '12:00 AM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time5), '12:01 AM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time7), '11:59 AM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time8), '11:59 PM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time6), '12:09 AM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time4), '12:08 AM')
+        self.assertEqual(RoutingCalculator.secondsToTime(time9), '12:00 PM')
