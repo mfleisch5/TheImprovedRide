@@ -93,7 +93,7 @@ class Manhattan_Distance(unittest.TestCase):
     def test_manhatten_distance(self):
         pickup = [10, 10]
         dropoff = [15, 15]
-        self.assertTrue(abs(distance(pickup[0], pickup[1], dropoff[0], dropoff[1]) - 482) < 1)
+        self.assertTrue(abs(RoutingCalculator.distance(pickup[0], pickup[1], dropoff[0], dropoff[1]) - 482) < 1)
 
     def test_manhatten_distance2(self):
         geocodes = {}
@@ -101,7 +101,7 @@ class Manhattan_Distance(unittest.TestCase):
 
         pickup = [10, 10]
         dropoff = [15, 15]
-        self.assertTrue(abs(distance(pickup[0], pickup[1], dropoff[0], dropoff[1]) - 482) < 1)
+        self.assertTrue(abs(RoutingCalculator.distance(pickup[0], pickup[1], dropoff[0], dropoff[1]) - 482) < 1)
 
         tripb = parser.Trip("P", "1:00 PM", "1", "75", "Liverpool St", "EAST BOSTON", "2128",
                             "272", "BRANDYWYNE DR", "EAST BOSTON", "2128", geocodes, failure)
