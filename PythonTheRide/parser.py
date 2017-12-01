@@ -167,7 +167,7 @@ class AllTrips:
             self.fail_set = set()
         for i, trip in pd.DataFrame(in_dict).\
                 dropna(subset=['PickHouseNumber', 'DropHouseNumber']).iterrows():
-            geoTrip = Trip(trip['Anchor'], trip['RequestTime'], trip['Companions'] + 1, trip['PickHouseNumber'],
+            geoTrip = Trip(trip['Anchor'], trip['RequestTime'], int(trip['Companions']) + 1, trip['PickHouseNumber'],
                            trip['PickAddress1'], trip['Pickcity'], trip['pickzip'], trip['DropHouseNumber'],
                            trip['DropAddress1'], trip['Dropcity'], trip['DropZip'], self.geo_data, self.fail_set)
             if geoTrip.valid_trip():

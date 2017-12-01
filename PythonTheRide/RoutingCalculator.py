@@ -117,7 +117,7 @@ def main(in_dict, geo_file, failure_file, num_trips):
     end_times = data[3]
     num_locations = min(num_trips * 2 + 1, len(locations))
     depot = 0
-    num_vehicles = max(10, int(num_locations * 0.15))
+    num_vehicles = max(10, int(num_locations * 0.3))
 
     # Create routing model.
     if num_locations > 0:
@@ -246,8 +246,8 @@ class Stop:
         return {"Address": self.addr,
                 "Type": "Pickup" if self.pickup else "Dropoff",
                 "Load": self.curr_load,
-                "Earliest": self.time_window[0],
-                "Latest": self.time_window[1]}
+                "Earliest": secondsToTime(self.time_window[0]),
+                "Latest": secondsToTime(self.time_window[1])}
 
 
 class Route:
