@@ -10,7 +10,6 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'echo Test'
-		sh 'apt-get install python3-pip'
 		sh 'pip3 install -r PythonTheRide/requirements.txt'
                 sh 'python3 -m unittest -v PythonTheRide/testsParser.py'
 		sh 'python3 -m unittest -v PythonTheRide/testsRoutingCalculator.py'
