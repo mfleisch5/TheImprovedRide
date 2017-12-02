@@ -1,23 +1,7 @@
 import pandas as pd, json, os
+from . import location_tools as tools
 from geopy.distance import great_circle
 from urllib import request as req
-
-
-def time_to_seconds(time):
-    array = time.split()
-    time = array[0]
-    pm = array[1] == 'PM'
-    time = time.split(":")
-
-    hour = int(time[0])
-    minutes = int(time[1])
-
-    if pm and hour != 12:
-        hour = int(hour) + 12
-    if hour == 12 and not pm:
-        hour = 0
-
-    return hour * 60 * 60 + minutes * 60
 
 
 class Trip:
@@ -53,21 +37,21 @@ class Trip:
         """
         if self.anchor == "P":
             # specified pickup time, 5 minutes early.
-            self.earliestPickup = time_to_seconds(str(self.times)) - 300
+            self.earliestPickup = tools.time_to_seconds(str(self.times)) - 300
             # given pickup time, we are 15 minutes late.
-            self.latestPickup = time_to_seconds(str(self.times)) + 900
+            self.latestPickup = tools.time_to_seconds(str(self.times)) + 900
             # We are given pickup time, caluclate  pickup time, and are 5 min early
-            self.earliestDropoff = time_to_seconds(self.times) - 300 + self.time_for_travel()
+            self.earliestDropoff = tools.time_to_seconds(self.times) - 300 + self.time_for_travel()
             # we are given pickup time, add travel time, and are 20 minutes
-            self.latestDropoff = time_to_seconds(self.times) + self.time_for_travel() + 900
+            self.latestDropoff = tools.time_to_seconds(self.times) + self.time_for_travel() + 900
         else:
             # this means the dropoff time is given. calculate the time it takes to drive, and then 5 minutes early
-            self.earliestPickup = time_to_seconds(str(self.times)) - self.time_for_travel() - 1200
+            self.earliestPickup = tools.time_to_seconds(str(self.times)) - self.time_for_travel() - 1200
             # given dropoff time, we calucate when to arrive, and then are 15 minutes late.
-            self.latestPickup = time_to_seconds(str(self.times)) - self.time_for_travel()
+            self.latestPickup = tools.time_to_seconds(str(self.times)) - self.time_for_travel()
             # we are given dropoff time. It's earliest pickup time + travel time
-            self.earliestDropoff = time_to_seconds(self.times) - 1200
-            self.latestDropoff = time_to_seconds(self.times)
+            self.earliestDropoff = tools.time_to_seconds(self.times) - 1200
+            self.latestDropoff = tools.time_to_seconds(self.times)
 
     def time_for_travel(self):
         """

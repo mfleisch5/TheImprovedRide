@@ -1,4 +1,5 @@
-import os, pandas as pd, argparse, RoutingCalculator
+import os, pandas as pd, argparse
+from . import RoutingCalculator
 
 parser = argparse.ArgumentParser()
 parser.add_argument("infile")
@@ -8,6 +9,7 @@ args = parser.parse_args()
 csvfile = args.infile
 dir_path = os.path.dirname(os.path.realpath(__file__))
 locations = args.num_locations
+
 
 def csv_to_records(incsv):
     return [{"Anchor": trip['Anchor'],
@@ -25,4 +27,4 @@ def csv_to_records(incsv):
 
 
 RoutingCalculator.main(csv_to_records(csvfile), os.path.join(dir_path, 'geocodes.json'),
-                       os.path.join(dir_path,'failures.json'), int(locations))
+                       os.path.join(dir_path, 'failures.json'), int(locations))
