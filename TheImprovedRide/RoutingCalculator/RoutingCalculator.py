@@ -12,47 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import parser
+from . import parser
+from . import location_tools as tools
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
-from geopy.distance import great_circle
-
-
-# we could change this to use the google api
-def distance(x1, y1, x2, y2):
-    """
-    Returns the "great circle" distance between two points
-    :param x1: X-coordinate of point 1
-    :param y1: Y-coordinate of point 1
-    :param x2: X-coordinate of point 2
-    :param y2: Y-coordinate of point 2
-    :return: The distance in miles
-    """
-    # Great-Circle distance
-    return great_circle((x1, y1), (x2, y2)).miles
-
-
-# converts the given time in seconds to a string military time hour, minutes
-def secondsToTime(seconds):
-    """
-    Converts seconds to a string "time" value
-    :param seconds: the int time in seconds (0-86400)
-    :return: Str -- the time value
-    """
-    minutes = seconds // 60
-    hours = minutes // 60
-    minutesRounded = minutes % 60
-    time = 'AM'
-
-    if hours >= 12:
-        time = 'PM'
-        hours = hours % 12
-    if hours == 0:
-        hours = 12
-    if minutesRounded < 10:
-        minutesRounded = '0' + str(minutesRounded)
-
-    return ('{0}:{1} {2}'.format(hours, minutesRounded, time))
 
 
 class CreateDistanceCallback(object):
@@ -70,7 +33,7 @@ class CreateDistanceCallback(object):
                 y1 = locations[from_node][1]
                 x2 = locations[to_node][0]
                 y2 = locations[to_node][1]
-                self.matrix[from_node][to_node] = distance(x1, y1, x2, y2)
+                self.matrix[from_node][to_node] = tools.distance(x1, y1, x2, y2)
 
     def Distance(self, from_node, to_node):
         return int(self.matrix[from_node][to_node])
@@ -94,17 +57,109 @@ class CreateTravelTimeCallback(object):
         self.speed = speed
 
     def TravelTime(self, from_node, to_node):
-        travel_time = self.dist_callback(from_node, to_node) / self.speed
+        travel_time = self.dist_callback(from_node, to_node) * 3600 / self.speed
         return int(travel_time)
 
 
-def main(in_dict, geo_file, failure_file, num_locations):
+class Stop:
+    def __init__(self, id, addr, pickup, time_window, curr_load):
+        """
+        Initializes a Stop object, which is the smallest data point in the RoutingCalculator
+        :param id: The given ID of the Stop
+        :param addr: The address that the stop will be at
+        :param pickup: A boolean dictating whether the Stop is a pickup or dropoff
+        :param time_window: A tuple of times in seconds that the driver can stop at this location
+        :param curr_load: The current load of passengers of the vehicle when it reaches the stop
+        """
+        self.id = id
+        self.pickup = pickup
+        self.addr = addr
+        self.time_window = time_window
+        self.curr_load = curr_load
+
+    def __str__(self):
+        return " {pickup_dropoff} at {addr}, Load({load}) Time({tmin}, {tmax})".format(  #
+            pickup_dropoff='Pickup' if self.pickup else 'Dropoff',
+            addr=self.addr,
+            load=self.curr_load,
+            tmin=tools.seconds_to_time(self.time_window[0]),
+            tmax=tools.seconds_to_time(self.time_window[1]))
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def to_dict(self):
+        return {"Address": self.addr,
+                "Type": "Pickup" if self.pickup else "Dropoff",
+                "Load": self.curr_load,
+                "Earliest": tools.seconds_to_time(self.time_window[0]),
+                "Latest": tools.seconds_to_time(self.time_window[1])}
+
+
+class Route:
+    def __init__(self):
+        self.stops = []
+
+    def add_stop(self, stop):
+        """
+        Adds a stop to this Route
+        :param stop: A Stop
+        :return: void -- changes the list to include the stop
+        """
+        self.stops.append(stop)
+
+    def __str__(self):
+        return "Depot -> -> {0} -> Depot".format(" -> ".join([str(stop) for stop in self.stops]))
+
+    def valid(self):
+        """
+        Returns True if all corresponding dropoffs and pickups exist in the Route
+
+        """
+        pickups = [stop.id for stop in self.stops if stop.pickup]
+        dropoffs = {stop.id for stop in self.stops if not stop.pickup}
+        return {p + 1 for p in pickups} == dropoffs
+
+    def __eq__(self, other):
+        return self.stops == other.stops
+
+
+class RoutingCalculator:
+    def __init__(self):
+        self.routes = []
+
+    def add_route(self, route):
+        """
+        Adds a route to the calculator
+        :param route: Route object
+
+        """
+        self.routes.append(route)
+
+    def __str__(self):
+        return "\n\n".join(['Route {0}: {1}'.format(i + 1, str(route)) for i, route in enumerate(self.routes)])
+
+    def valid(self):
+        """
+        Returns True if all Routes are valid
+
+        """
+        return all(route.valid() for route in self.routes)
+
+    def __eq__(self, other):
+        return self.routes == other.routes
+
+    def to_json_format(self):
+        return [[stop.to_dict() for stop in route.stops] for route in self.routes]
+
+
+def main(in_dict, geo_file, failure_file, num_trips):
     """
     The main Routing Calculator function, which calculates the routes given correct input
     :param in_dict: A record-like list of dictionaries which indicates all Trip objects that will be parsed
     :param geo_file: The path to a JSON file which maps all known addresses to geocodes
     :param failure_file: The path to a JSON file which lists all addresses that can't be geocoded
-    :param num_locations: The number of locations to be included in the calculator
+    :param num_trips: The number of trips to be included in the calculator
     :return: A RoutingCalculator object that contains all Routes and Stop values
     """
     # Create the data.
@@ -115,9 +170,9 @@ def main(in_dict, geo_file, failure_file, num_locations):
     demands = data[1]
     start_times = data[2]
     end_times = data[3]
-    num_locations = min(num_locations, len(locations))
+    num_locations = min(num_trips * 2 + 1, len(locations))
     depot = 0
-    num_vehicles = max(10, int(num_locations * 0.15))
+    num_vehicles = max(10, int(num_locations * 0.3))
 
     # Create routing model.
     if num_locations > 0:
@@ -206,89 +261,10 @@ def main(in_dict, geo_file, failure_file, num_locations):
                 return routes
             else:
                 print("Invalid Routes")
+                raise Exception("Invalid Routes")
         else:
             print('No solution found.')
+            raise Exception("No solution could be found")
     else:
         print('Specify an instance greater than 0.')
-
-
-class Stop:
-    def __init__(self, id, addr, pickup, time_window, curr_load):
-        """
-        Initializes a Stop object, which is the smallest data point in the RoutingCalculator
-        :param id: The given ID of the Stop
-        :param addr: The address that the stop will be at
-        :param pickup: A boolean dictating whether the Stop is a pickup or dropoff
-        :param time_window: A tuple of times in seconds that the driver can stop at this location
-        :param curr_load: The current load of passengers of the vehicle when it reaches the stop
-        """
-        self.id = id
-        self.pickup = pickup
-        self.addr = addr
-        self.time_window = time_window
-        self.curr_load = curr_load
-
-    def __str__(self):
-        return " {pickup_dropoff} at {addr}, Load({load}) Time({tmin}, {tmax})".format(  #
-            pickup_dropoff='Pickup' if self.pickup else 'Dropoff',
-            addr=self.addr,
-            load=self.curr_load,
-            tmin=secondsToTime(self.time_window[0]),
-            tmax=secondsToTime(self.time_window[1]))
-
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
-
-
-class Route:
-    def __init__(self):
-        self.stops = []
-
-    def add_stop(self, stop):
-        """
-        Adds a stop to this Route
-        :param stop: A Stop
-        :return: void -- changes the list to include the stop
-        """
-        self.stops.append(stop)
-
-    def __str__(self):
-        return "Depot -> -> {0} -> Depot".format(" -> ".join([str(stop) for stop in self.stops]))
-
-    def valid(self):
-        """
-        Returns True if all corresponding dropoffs and pickups exist in the Route
-
-        """
-        pickups = [stop.id for stop in self.stops if stop.pickup]
-        dropoffs = {stop.id for stop in self.stops if not stop.pickup}
-        return {p + 1 for p in pickups} == dropoffs
-
-    def __eq__(self, other):
-        return self.stops == other.stops
-
-
-class RoutingCalculator:
-    def __init__(self):
-        self.routes = []
-
-    def add_route(self, route):
-        """
-        Adds a route to the calculator
-        :param route: Route object
-
-        """
-        self.routes.append(route)
-
-    def __str__(self):
-        return "\n\n".join(['Route {0}: {1}'.format(i + 1, str(route)) for i, route in enumerate(self.routes)])
-
-    def valid(self):
-        """
-        Returns True if all Routes are valid
-
-        """
-        return all(route.valid() for route in self.routes)
-
-    def __eq__(self, other):
-        return self.routes == other.routes
+        raise Exception("Specify an instance greater than 0.")

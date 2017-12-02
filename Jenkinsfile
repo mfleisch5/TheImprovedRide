@@ -10,9 +10,9 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'echo Test'
-		sh 'pip3 install -r PythonTheRide/requirements.txt'    
-                sh 'python -m unittest -v testsParser'
-		sh 'python -m unittest -v testsRoutingCalculator'
+		sh 'pip3 install -r TheImprovedRide/requirements.txt'
+                sh 'python3 -m unittest -v TheImprovedRide/tests/testParser.py'
+		sh 'python3 -m unittest -v TheImprovedRide/tests/testRoutingCalculator.py'
             }
         }
     }
