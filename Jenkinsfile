@@ -11,8 +11,8 @@ pipeline {
             steps {
                 sh 'echo Test'
 		sh 'pip3 install -r TheImprovedRide/requirements.txt'
-                sh 'python3 -m unittest -v TheImprovedRide/tests/testsParser.py'
-		sh 'python3 -m unittest -v TheImprovedRide/tests//testRoutingCalculator.py'
+                sh 'python3 -m unittest -v TheImprovedRide/tests/testParser.py'
+		sh 'python3 -m unittest -v TheImprovedRide/tests/testRoutingCalculator.py'
             }
         }
     }
