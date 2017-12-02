@@ -16,8 +16,8 @@ class GreatCircleDistance(unittest.TestCase):
         test_tripB = parser.Trip("A", "2:00 PM", "1", "43", "Brattle St", "CAMBRIDGE", "2138",
                                  "29", "ST. SAUVEUR CT", "CAMBRIDGE", "2138", geocodes, failure)
 
-        self.assertEqual(abs(test_tripA.time_for_travel()), 232.68405651298997)
-        self.assertEqual(abs(test_tripB.time_for_travel()), 232.68405651298997)
+        self.assertEqual(abs(test_tripA.time_for_travel()), 232.68405651298116)
+        self.assertEqual(abs(test_tripB.time_for_travel()), 232.68405651298116)
         self.assertEqual(abs(test_tripC.time_for_travel()), 0)
 
 
