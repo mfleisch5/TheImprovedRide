@@ -1,6 +1,6 @@
 import unittest, os
-from ..RoutingCalculator import location_tools as tools
-from ..RoutingCalculator import parser
+from routing import tools as tools
+from routing import parser
 
 
 class GreatCircleDistance(unittest.TestCase):

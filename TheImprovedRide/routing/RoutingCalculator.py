@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from . import parser
-from . import location_tools as tools
+from . import tools as tools
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 
@@ -258,7 +258,7 @@ def main(in_dict, geo_file, failure_file, num_trips):
                 routes.add_route(route)
             if routes.valid():
                 print(routes)
-                return routes
+                return routes, trip_data.uber
             else:
                 print("Invalid Routes")
                 raise Exception("Invalid Routes")

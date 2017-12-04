@@ -1,5 +1,5 @@
 import pandas as pd, json, os
-from . import location_tools as tools
+from . import tools as tools
 from geopy.distance import great_circle
 from urllib import request as req
 
@@ -125,6 +125,12 @@ class Trip:
         geo_dict[addr] = latlong
         return tuple(float(geo) for geo in latlong.split(','))
 
+    def to_dict(self):
+        return {"anchor" : self.anchor,
+                "time" : self.times,
+                "pickup" : self.full_pick,
+                "dropoff" : self.full_drop}
+
 
 class AllTrips:
     def __init__(self, in_dict, geo_file, fail_file):
@@ -137,6 +143,7 @@ class AllTrips:
          (can be a file that does not exist yet)
         """
         self.trips = []
+        self.uber = []
         self.geo_file = geo_file
         self.fail_file = fail_file
         if os.path.exists(self.geo_file):
@@ -156,6 +163,8 @@ class AllTrips:
                            trip['DropAddress1'], trip['Dropcity'], trip['DropZip'], self.geo_data, self.fail_set)
             if geoTrip.valid_trip():
                 self.trips.append(geoTrip)
+            else:
+                self.uber.append(geoTrip.to_dict())
         with open(self.geo_file, 'w') as gf:
             json.dump(self.geo_data, gf, indent=4)
         with open(self.fail_file, 'w') as ff:
