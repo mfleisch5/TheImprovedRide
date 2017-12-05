@@ -1,6 +1,6 @@
 import unittest
-from ..RoutingCalculator import RoutingCalculator
-from ..RoutingCalculator import location_tools as tools
+from routing import RoutingCalculator, tools
+
 
 class TestRouteCalculator(unittest.TestCase):
     def test_outstr(self):
@@ -16,7 +16,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "Dropcity": "BROOKLINE",
                   "DropZip": 2446,
                   }]
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 1)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 1)[0]
         self.assertEqual(str(routes), "Route 1: Depot -> ->  Pickup at 43 Brattle St CAMBRIDGE 2138, Load(0) " +
                          "Time(2:34 PM, 2:54 PM) ->  Dropoff at 1184 BEACON ST BROOK" +
                          "LINE 2446, Load(2) Time(2:40 PM, 3:00 PM) -> Depot")
@@ -71,7 +71,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "Dropcity": "SOMERVILLE",
                   "DropZip": 2143,
                   }]
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 9)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 9)[0]
         self.assertRaises(Exception, routes)
 
         # to tests the route calculator with 4 trips in same towns
@@ -126,7 +126,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "DropZip": 2143,
                   }]
 
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 4)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 4)[0]
         i = str(routes)
         self.maxDiff = None
 
@@ -193,7 +193,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "DropZip": 2143,
                   }]
 
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 9)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 9)[0]
         i = str(routes)
         self.maxDiff = None
 
@@ -322,7 +322,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "DropAddress1": "CENTRE ST",
                   "Dropcity": "JAMAICA PLAIN",
                   "DropZip": 2130}]
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 21)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 21)[0]
         i = str(routes)
         self.maxDiff = None
         self.assertEqual(i,
@@ -407,7 +407,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "PickAddress1": "MAPLE AVE",
                   "Pickcity": "CAMBRIDGE",
                   "pickzip": 2139}]
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 6)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 6)[0]
         i = str(routes)
         self.assertEqual(i, "")
 
@@ -633,7 +633,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "DropAddress1": "FRUIT ST",
                   "Dropcity": "BOSTON",
                   "DropZip": 2114}]
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 39)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 39)[0]
         i = str(routes)
         self.maxDiff = None
 
@@ -673,7 +673,7 @@ class TestRouteCalculator(unittest.TestCase):
                  ]
 
         self.maxDiff = None
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 2)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 2)[0]
         self.assertEqual(str(routes), "Route 1: Depot -> ->  Pickup at 388 MAIN ST CHARLESTOWN 2129, Load(0) "
                                       "Time(2:36 PM, 2:56 PM) ->  Pickup at 24 DEVENS ST CHARLESTOWN 2129, "
                                       "Load(2) Time(2:37 PM, 2:57 PM) ->  Dropoff at 75 LIVERPOOL St EAST BOSTON 2128, "
@@ -706,7 +706,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "DropAddress1": "City Sq",
                   "Dropcity": "CHARLESTOWN",
                   "DropZip": 2129}]
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 2)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 2)[0]
         i = str(routes)
         self.maxDiff = None
 
@@ -768,7 +768,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "Dropcity": "JAMAICA PLAIN",
                   "DropZip": 2130,
                   }]
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 9)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 9)[0]
         i = str(routes)
         self.maxDiff = None
 
@@ -828,7 +828,7 @@ class TestRouteCalculator(unittest.TestCase):
                   "Dropcity": "JAMAICA PLAIN",
                   "DropZip": 2130,
                   }]
-        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 4)
+        routes = RoutingCalculator.main(input, tools.geo_path, tools.fail_path, 4)[0]
         i = str(routes)
         self.maxDiff = None
 
