@@ -1,5 +1,5 @@
 from flask import Flask, request
-from . import RoutingCalculator
+from routing import RoutingCalculator
 import json, os
 from flask_cors import CORS
 

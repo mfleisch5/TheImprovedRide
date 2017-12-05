@@ -1,6 +1,6 @@
 import unittest
-from routing import RoutingCalculator
-from routing import tools as tools
+from routing import RoutingCalculator, tools
+
 
 class TestRouteCalculator(unittest.TestCase):
     def test_outstr(self):

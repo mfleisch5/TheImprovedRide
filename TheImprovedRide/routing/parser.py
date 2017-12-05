@@ -1,5 +1,5 @@
 import pandas as pd, json, os
-from . import tools as tools
+from . import tools
 from geopy.distance import great_circle
 from urllib import request as req
 
